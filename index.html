@@ -581,7 +581,6 @@ footer {
 <body>
 
 <div class="app">
-  <!-- HEADER -->
   <header>
     <div class="logo">
       <svg class="logo-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Data Transfer Estimator logo">
@@ -600,497 +599,225 @@ footer {
     </button>
   </header>
 
-  <!-- TABS -->
   <div class="tabs" role="tablist">
-    <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchTab('time')">
-      ⏱ Stima il Tempo
-    </button>
-    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('capacity')">
-      📦 Stima la Capacità
-    </button>
-    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('requests')">
-      📡 API Requests
-    </button>
+    <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchTab('time')">⏱ Stima il Tempo</button>
+    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('capacity')">📦 Stima la Capacità</button>
+    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('requests')">📡 API Requests</button>
   </div>
 
-  <!-- PANEL: STIMA TEMPO -->
   <div id="panel-time" class="panel active">
     <div class="card">
-      <div class="card-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Parametri di Trasferimento
-      </div>
+      <div class="card-title">Parametri di Trasferimento</div>
       <div class="form-grid">
         <div class="field">
           <label class="field-label" for="t-datasize">Dati da trasferire</label>
-          <div class="input-wrap">
-            <input type="number" id="t-datasize" placeholder="es. 100" min="0" step="any" oninput="computeTime()">
-            <span class="input-unit" id="t-datasize-unit">GB</span>
-          </div>
-          <div class="unit-group" style="margin-top: var(--space-1);">
-            <button class="unit-pill" onclick="setDataUnit('MB')">MB</button>
-            <button class="unit-pill active" onclick="setDataUnit('GB')">GB</button>
-            <button class="unit-pill" onclick="setDataUnit('TB')">TB</button>
-          </div>
+          <div class="input-wrap"><input type="number" id="t-datasize" placeholder="es. 100" min="0" step="any" oninput="computeTime()"><span class="input-unit" id="t-datasize-unit">GB</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setDataUnit('MB')">MB</button><button class="unit-pill active" onclick="setDataUnit('GB')">GB</button><button class="unit-pill" onclick="setDataUnit('TB')">TB</button></div>
         </div>
         <div class="field">
           <label class="field-label" for="t-bandwidth">Banda upload cliente <span>(velocità effettiva)</span></label>
-          <div class="input-wrap">
-            <input type="number" id="t-bandwidth" placeholder="es. 100" min="0" step="any" oninput="computeTime()">
-            <span class="input-unit" id="t-bw-unit">Mbps</span>
-          </div>
-          <div class="unit-group" style="margin-top: var(--space-1);">
-            <button class="unit-pill" onclick="setBwUnit('time','kbps')">kbps</button>
-            <button class="unit-pill active" onclick="setBwUnit('time','Mbps')">Mbps</button>
-            <button class="unit-pill" onclick="setBwUnit('time','Gbps')">Gbps</button>
-          </div>
+          <div class="input-wrap"><input type="number" id="t-bandwidth" placeholder="es. 100" min="0" step="any" oninput="computeTime()"><span class="input-unit" id="t-bw-unit">Mbps</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setBwUnit('time','kbps')">kbps</button><button class="unit-pill active" onclick="setBwUnit('time','Mbps')">Mbps</button><button class="unit-pill" onclick="setBwUnit('time','Gbps')">Gbps</button></div>
         </div>
       </div>
-
       <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-divider);">
         <div class="field-label">Overhead di protocollo <span>(TCP, TLS, metadata)</span></div>
-        <div class="overhead-row">
-          <span class="overhead-label">0%</span>
-          <input type="range" id="t-overhead" min="0" max="40" value="10" oninput="updateOverhead('t'); computeTime()">
-          <span class="overhead-label">40%</span>
-          <span class="overhead-val" id="t-overhead-val">10%</span>
-        </div>
+        <div class="overhead-row"><span class="overhead-label">0%</span><input type="range" id="t-overhead" min="0" max="40" value="10" oninput="updateOverhead('t'); computeTime()"><span class="overhead-label">40%</span><span class="overhead-val" id="t-overhead-val">10%</span></div>
         <div class="field-hint">Riduce la banda effettiva disponibile. Tipicamente 5–15% per connessioni standard.</div>
       </div>
     </div>
-
-    <div class="speed-ref">
-      <div class="speed-ref-title">Velocità di riferimento — clicca per inserire</div>
-      <div class="speed-pills">
-        <button class="speed-pill" onclick="setSpeed(4,'Mbps')"><span class="sp-name">ADSL</span><span class="sp-val">4 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeed(20,'Mbps')"><span class="sp-name">FTTC 20</span><span class="sp-val">20 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeed(50,'Mbps')"><span class="sp-name">FTTC 50</span><span class="sp-val">50 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeed(100,'Mbps')"><span class="sp-name">FTTH 100</span><span class="sp-val">100 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeed(200,'Mbps')"><span class="sp-name">FTTH 200</span><span class="sp-val">200 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeed(1000,'Mbps')"><span class="sp-name">Fibra 1 Gbit</span><span class="sp-val">1000 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeed(10,'Gbps')"><span class="sp-name">10GbE</span><span class="sp-val">10 Gbps</span></button>
-      </div>
-    </div>
-
-    <div class="card" id="t-results">
-      <div class="card-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Risultato
-      </div>
-      <div id="t-result-content">
-        <div class="empty-state">
-          <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <h3>Inserisci i parametri</h3>
-          <p>Compila i campi sopra per vedere la stima del tempo di trasferimento.</p>
-        </div>
-      </div>
-    </div>
+    <div class="card" id="t-results"><div class="card-title">Risultato</div><div id="t-result-content"><div class="empty-state"><h3>Inserisci i parametri</h3><p>Compila i campi sopra per vedere la stima del tempo di trasferimento.</p></div></div></div>
   </div>
 
-  <!-- PANEL: STIMA CAPACITÀ -->
   <div id="panel-capacity" class="panel">
     <div class="card">
-      <div class="card-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-        Finestra Temporale e Banda
-      </div>
+      <div class="card-title">Finestra Temporale e Banda</div>
       <div class="form-grid">
         <div class="field">
           <label class="field-label" for="c-duration">Lasso di tempo disponibile</label>
-          <div class="input-wrap">
-            <input type="number" id="c-duration" placeholder="es. 8" min="0" step="any" oninput="computeCapacity()">
-            <span class="input-unit" id="c-dur-unit">ore</span>
-          </div>
-          <div class="unit-group" style="margin-top: var(--space-1);">
-            <button class="unit-pill" onclick="setTimeUnit('min')">min</button>
-            <button class="unit-pill active" onclick="setTimeUnit('ore')">ore</button>
-            <button class="unit-pill" onclick="setTimeUnit('giorni')">giorni</button>
-          </div>
+          <div class="input-wrap"><input type="number" id="c-duration" placeholder="es. 8" min="0" step="any" oninput="computeCapacity()"><span class="input-unit" id="c-dur-unit">ore</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setTimeUnit('min')">min</button><button class="unit-pill active" onclick="setTimeUnit('ore')">ore</button><button class="unit-pill" onclick="setTimeUnit('giorni')">giorni</button></div>
         </div>
         <div class="field">
           <label class="field-label" for="c-bandwidth">Banda upload cliente <span>(velocità effettiva)</span></label>
-          <div class="input-wrap">
-            <input type="number" id="c-bandwidth" placeholder="es. 100" min="0" step="any" oninput="computeCapacity()">
-            <span class="input-unit" id="c-bw-unit2">Mbps</span>
-          </div>
-          <div class="unit-group" style="margin-top: var(--space-1);">
-            <button class="unit-pill" onclick="setBwUnit('cap','kbps')">kbps</button>
-            <button class="unit-pill active" onclick="setBwUnit('cap','Mbps')">Mbps</button>
-            <button class="unit-pill" onclick="setBwUnit('cap','Gbps')">Gbps</button>
-          </div>
+          <div class="input-wrap"><input type="number" id="c-bandwidth" placeholder="es. 100" min="0" step="any" oninput="computeCapacity()"><span class="input-unit" id="c-bw-unit2">Mbps</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setBwUnit('cap','kbps')">kbps</button><button class="unit-pill active" onclick="setBwUnit('cap','Mbps')">Mbps</button><button class="unit-pill" onclick="setBwUnit('cap','Gbps')">Gbps</button></div>
         </div>
       </div>
-
       <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-divider);">
         <div class="field-label">Overhead di protocollo <span>(TCP, TLS, metadata)</span></div>
-        <div class="overhead-row">
-          <span class="overhead-label">0%</span>
-          <input type="range" id="c-overhead" min="0" max="40" value="10" oninput="updateOverhead('c'); computeCapacity()">
-          <span class="overhead-label">40%</span>
-          <span class="overhead-val" id="c-overhead-val">10%</span>
-        </div>
-        <div class="field-hint">Riduce la banda effettiva disponibile. Tipicamente 5–15% per connessioni standard.</div>
+        <div class="overhead-row"><span class="overhead-label">0%</span><input type="range" id="c-overhead" min="0" max="40" value="10" oninput="updateOverhead('c'); computeCapacity()"><span class="overhead-label">40%</span><span class="overhead-val" id="c-overhead-val">10%</span></div>
       </div>
     </div>
-
-    <div class="speed-ref">
-      <div class="speed-ref-title">Velocità di riferimento — clicca per inserire</div>
-      <div class="speed-pills">
-        <button class="speed-pill" onclick="setSpeedCap(4,'Mbps')"><span class="sp-name">ADSL</span><span class="sp-val">4 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeedCap(20,'Mbps')"><span class="sp-name">FTTC 20</span><span class="sp-val">20 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeedCap(50,'Mbps')"><span class="sp-name">FTTC 50</span><span class="sp-val">50 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeedCap(100,'Mbps')"><span class="sp-name">FTTH 100</span><span class="sp-val">100 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeedCap(200,'Mbps')"><span class="sp-name">FTTH 200</span><span class="sp-val">200 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeedCap(1000,'Mbps')"><span class="sp-name">Fibra 1 Gbit</span><span class="sp-val">1000 Mbps</span></button>
-        <button class="speed-pill" onclick="setSpeedCap(10,'Gbps')"><span class="sp-name">10GbE</span><span class="sp-val">10 Gbps</span></button>
-      </div>
-    </div>
-
-    <div class="card" id="c-results">
-      <div class="card-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Capacità Stimata
-      </div>
-      <div id="c-result-content">
-        <div class="empty-state">
-          <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <h3>Inserisci i parametri</h3>
-          <p>Compila i campi sopra per vedere quanti dati puoi trasferire nel tempo indicato.</p>
-        </div>
-      </div>
-    </div>
+    <div class="card" id="c-results"><div class="card-title">Capacità Stimata</div><div id="c-result-content"><div class="empty-state"><h3>Inserisci i parametri</h3><p>Compila i campi sopra per vedere quanti dati puoi trasferire nel tempo indicato.</p></div></div></div>
   </div>
 
-  <!-- PANEL: API REQUESTS -->
   <div id="panel-requests" class="panel">
     <div class="card">
-      <div class="card-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-        Parametri del Dataset e Servizio
-      </div>
-
-      <!-- Profili preimpostati -->
-      <div style="margin-bottom: var(--space-5);">
-        <div class="field-label" style="margin-bottom: var(--space-2);">Profilo rapido <span>(clicca per precompilare)</span></div>
-        <div class="profile-pills">
-          <button class="profile-pill" onclick="applyProfile('veeam-oci')">
-            <span class="pp-name">🛡️ Veeam → OCI Object Storage</span>
-            <span class="pp-desc">Backup VMs, file medi 1 GB, soglia multipart 5 GB</span>
-          </button>
-          <button class="profile-pill" onclick="applyProfile('veeam-s3')">
-            <span class="pp-name">🛡️ Veeam → S3 Compatible</span>
-            <span class="pp-desc">Backup VMs, file medi 500 MB, soglia multipart 5 GB</span>
-          </button>
-          <button class="profile-pill" onclick="applyProfile('files-small')">
-            <span class="pp-name">📂 File piccoli (documenti)</span>
-            <span class="pp-desc">File medi 5 MB, PUT standard</span>
-          </button>
-          <button class="profile-pill" onclick="applyProfile('files-large')">
-            <span class="pp-name">🎞️ File grandi (media/VM disks)</span>
-            <span class="pp-desc">File medi 10 GB, multipart obbligatorio</span>
-          </button>
-        </div>
-      </div>
-
+      <div class="card-title">Parametri del Dataset e Servizio</div>
       <div class="form-grid">
         <div class="field">
           <label class="field-label" for="r-totalsize">Totale dati da inviare</label>
-          <div class="input-wrap">
-            <input type="number" id="r-totalsize" placeholder="es. 500" min="0" step="any" oninput="computeRequests()">
-            <span class="input-unit" id="r-totalsize-unit">GB</span>
-          </div>
-          <div class="unit-group" style="margin-top: var(--space-1);">
-            <button class="unit-pill" onclick="setReqUnit('totalsize','MB')">MB</button>
-            <button class="unit-pill active" onclick="setReqUnit('totalsize','GB')">GB</button>
-            <button class="unit-pill" onclick="setReqUnit('totalsize','TB')">TB</button>
-          </div>
+          <div class="input-wrap"><input type="number" id="r-totalsize" placeholder="es. 500" min="0" step="any" oninput="computeRequests()"><span class="input-unit" id="r-totalsize-unit">GB</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setReqUnit('totalsize','MB')">MB</button><button class="unit-pill active" onclick="setReqUnit('totalsize','GB')">GB</button><button class="unit-pill" onclick="setReqUnit('totalsize','TB')">TB</button></div>
         </div>
         <div class="field">
           <label class="field-label" for="r-filesize">Dimensione media per file/oggetto</label>
-          <div class="input-wrap">
-            <input type="number" id="r-filesize" placeholder="es. 1" min="0" step="any" oninput="computeRequests()">
-            <span class="input-unit" id="r-filesize-unit">GB</span>
-          </div>
-          <div class="unit-group" style="margin-top: var(--space-1);">
-            <button class="unit-pill" onclick="setReqUnit('filesize','MB')">MB</button>
-            <button class="unit-pill active" onclick="setReqUnit('filesize','GB')">GB</button>
-            <button class="unit-pill" onclick="setReqUnit('filesize','TB')">TB</button>
-          </div>
+          <div class="input-wrap"><input type="number" id="r-filesize" placeholder="es. 1" min="0" step="any" oninput="computeRequests(); computeBandwidthToRequests()"><span class="input-unit" id="r-filesize-unit">GB</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setReqUnit('filesize','MB')">MB</button><button class="unit-pill active" onclick="setReqUnit('filesize','GB')">GB</button><button class="unit-pill" onclick="setReqUnit('filesize','TB')">TB</button></div>
         </div>
         <div class="field">
           <label class="field-label" for="r-partsize">Dimensione parte multipart <span>(chunk)</span></label>
-          <div class="input-wrap">
-            <input type="number" id="r-partsize" placeholder="es. 100" min="1" step="1" value="100" oninput="computeRequests()">
-            <span class="input-unit">MB</span>
-          </div>
-          <div class="field-hint">OCI default: 100 MB/parte. Veeam usa tipicamente 64–256 MB.</div>
+          <div class="input-wrap"><input type="number" id="r-partsize" placeholder="es. 100" min="1" step="1" value="100" oninput="computeRequests(); computeBandwidthToRequests()"><span class="input-unit">MB</span></div>
         </div>
         <div class="field">
           <label class="field-label" for="r-threshold">Soglia multipart upload</label>
-          <div class="input-wrap">
-            <input type="number" id="r-threshold" placeholder="es. 5" min="0" step="any" value="5" oninput="computeRequests()">
-            <span class="input-unit" id="r-threshold-unit">GB</span>
-          </div>
-          <div class="unit-group" style="margin-top: var(--space-1);">
-            <button class="unit-pill" onclick="setReqUnit('threshold','MB')">MB</button>
-            <button class="unit-pill active" onclick="setReqUnit('threshold','GB')">GB</button>
-          </div>
-          <div class="field-hint">File sotto soglia → PUT singolo. Sopra → multipart (PUT initiate + parti + commit).</div>
+          <div class="input-wrap"><input type="number" id="r-threshold" placeholder="es. 5" min="0" step="any" value="5" oninput="computeRequests(); computeBandwidthToRequests()"><span class="input-unit" id="r-threshold-unit">GB</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setReqUnit('threshold','MB')">MB</button><button class="unit-pill active" onclick="setReqUnit('threshold','GB')">GB</button></div>
         </div>
       </div>
-
-      <!-- Servizio e costi -->
       <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-divider);">
-        <div class="field-label" style="margin-bottom: var(--space-3);">Servizio cloud <span>(per stima costi)</span></div>
         <div class="form-grid">
           <div class="field">
             <label class="field-label" for="r-service">Provider</label>
-            <div class="input-wrap">
-              <select id="r-service" onchange="updateServiceCosts(); computeRequests()">
-                <option value="oci">OCI Object Storage</option>
-                <option value="s3">AWS S3 (Standard)</option>
-                <option value="azure">Azure Blob Storage</option>
-                <option value="custom">Personalizzato</option>
-              </select>
-              <span class="input-unit">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-              </span>
-            </div>
+            <div class="input-wrap"><select id="r-service" onchange="updateServiceCosts(); computeRequests()"><option value="oci">OCI Object Storage</option><option value="s3">AWS S3 (Standard)</option><option value="azure">Azure Blob Storage</option><option value="custom">Personalizzato</option></select><span class="input-unit">▼</span></div>
           </div>
           <div class="field">
             <label class="field-label" for="r-cost-per-10k">Costo per 10.000 PUT request <span>(€/$)</span></label>
-            <div class="input-wrap">
-              <input type="number" id="r-cost-per-10k" placeholder="es. 0.0085" min="0" step="any" value="0.0085" oninput="computeRequests()">
-              <span class="input-unit" id="r-currency">€</span>
-            </div>
-            <div class="field-hint" id="r-cost-hint">OCI: ~€0.0085 per 10k richieste PUT/POST</div>
+            <div class="input-wrap"><input type="number" id="r-cost-per-10k" placeholder="es. 0.0085" min="0" step="any" value="0.0085" oninput="computeRequests()"><span class="input-unit" id="r-currency">€</span></div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="card" id="r-results">
-      <div class="card-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-        Stima API Requests
-      </div>
-      <div id="r-result-content">
-        <div class="empty-state">
-          <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-          <h3>Inserisci i parametri</h3>
-          <p>Compila dimensione totale e dimensione media per file per stimare le richieste API.</p>
+    <div class="card" id="btr-card">
+      <div class="card-title">Da Banda a Request Mensili</div>
+      <div class="info-box" style="margin-bottom: var(--space-4);"><div>Data la <strong>banda upload del cliente</strong>, calcola quanti GB riesce a trasferire al mese e quante PUT request corrispondono, per confrontarle con la soglia OCI.</div></div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="btr-bandwidth">Banda upload cliente <span>(velocità effettiva)</span></label>
+          <div class="input-wrap"><input type="number" id="btr-bandwidth" placeholder="es. 100" min="0" step="any" oninput="computeBandwidthToRequests()"><span class="input-unit" id="btr-bw-unit">Mbps</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setBtrUnit('kbps')">kbps</button><button class="unit-pill active" onclick="setBtrUnit('Mbps')">Mbps</button><button class="unit-pill" onclick="setBtrUnit('Gbps')">Gbps</button></div>
+        </div>
+        <div class="field">
+          <label class="field-label">Overhead protocollo</label>
+          <div class="overhead-row"><span class="overhead-label">0%</span><input type="range" id="btr-overhead" min="0" max="40" value="10" oninput="updateOverheadBtr(); computeBandwidthToRequests()"><span class="overhead-label">40%</span><span class="overhead-val" id="btr-overhead-val">10%</span></div>
         </div>
       </div>
+      <div class="form-grid" style="margin-top: var(--space-4);">
+        <div class="field">
+          <label class="field-label" for="btr-usagepct">Utilizzo effettivo della banda <span>(% del mese)</span></label>
+          <div class="input-wrap"><input type="number" id="btr-usagepct" min="1" max="100" step="1" value="70" oninput="computeBandwidthToRequests()"><span class="input-unit">%</span></div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="btr-oci-limit">Soglia request OCI <span>(per confronto)</span></label>
+          <div class="input-wrap"><input type="number" id="btr-oci-limit" min="1" step="1" value="10000" oninput="computeBandwidthToRequests()"><span class="input-unit">req</span></div>
+        </div>
+      </div>
+      <div id="btr-result-content" style="margin-top: var(--space-5);"><div class="empty-state" style="padding: var(--space-8);"><h3>Inserisci la banda</h3><p>Inserisci la banda upload per calcolare le request mensili stimate.</p></div></div>
     </div>
+
+    <div class="card" id="r-results"><div class="card-title">Stima API Requests</div><div id="r-result-content"><div class="empty-state"><h3>Inserisci i parametri</h3><p>Compila dimensione totale e dimensione media per file per stimare le richieste API.</p></div></div></div>
   </div>
 
-  <footer>Data Transfer Estimator &mdash; Calcolo locale, nessun dato inviato</footer>
+  <footer>Data Transfer Estimator — Calcolo locale, nessun dato inviato</footer>
 </div>
 
 <script>
 const state = {
   time: { dataUnit: 'GB', bwUnit: 'Mbps', overhead: 10 },
   cap:  { bwUnit: 'Mbps', timeUnit: 'ore', overhead: 10 },
-  req:  { totalsizeUnit: 'GB', filesizeUnit: 'GB', thresholdUnit: 'GB' }
+  req:  { totalsizeUnit: 'GB', filesizeUnit: 'GB', thresholdUnit: 'GB' },
+  btr:  { bwUnit: 'Mbps', overhead: 10 }
 };
 
-// ===== THEME TOGGLE =====
 (function(){
   const t = document.querySelector('[data-theme-toggle]');
   const r = document.documentElement;
   let d = matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
   r.setAttribute('data-theme', d);
-  updateToggleIcon(t, d);
   t && t.addEventListener('click', () => {
     d = d === 'dark' ? 'light' : 'dark';
     r.setAttribute('data-theme', d);
-    updateToggleIcon(t, d);
   });
-  function updateToggleIcon(btn, theme) {
-    if (!btn) return;
-    btn.innerHTML = theme === 'dark'
-      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
-      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-    btn.setAttribute('aria-label', 'Passa a tema ' + (theme === 'dark' ? 'chiaro' : 'scuro'));
-  }
 })();
 
-// ===== TAB SWITCH =====
 function switchTab(tab) {
   const tabs = ['time', 'capacity', 'requests'];
   document.querySelectorAll('.tab-btn').forEach((b, i) => {
     b.classList.toggle('active', tabs[i] === tab);
     b.setAttribute('aria-selected', tabs[i] === tab);
   });
-  tabs.forEach(t => {
-    document.getElementById('panel-' + t).classList.toggle('active', t === tab);
-  });
+  tabs.forEach(t => document.getElementById('panel-' + t).classList.toggle('active', t === tab));
 }
 
-// ===== UNIT SETTERS =====
 function setDataUnit(unit) {
   state.time.dataUnit = unit;
   document.getElementById('t-datasize-unit').textContent = unit;
-  document.querySelectorAll('#panel-time .form-grid .field:first-child .unit-pill').forEach(p => {
-    p.classList.toggle('active', p.textContent.trim() === unit);
-  });
   computeTime();
 }
-
 function setBwUnit(panel, unit) {
-  if (panel === 'time') {
-    state.time.bwUnit = unit;
-    document.getElementById('t-bw-unit').textContent = unit;
-    document.querySelectorAll('#panel-time .form-grid .field:last-child .unit-pill').forEach(p => {
-      p.classList.toggle('active', p.textContent.trim() === unit);
-    });
-    computeTime();
-  } else {
-    state.cap.bwUnit = unit;
-    document.getElementById('c-bw-unit2').textContent = unit;
-    document.querySelectorAll('#panel-capacity .form-grid .field:last-child .unit-pill').forEach(p => {
-      p.classList.toggle('active', p.textContent.trim() === unit);
-    });
-    computeCapacity();
-  }
+  if (panel === 'time') { state.time.bwUnit = unit; document.getElementById('t-bw-unit').textContent = unit; computeTime(); }
+  else { state.cap.bwUnit = unit; document.getElementById('c-bw-unit2').textContent = unit; computeCapacity(); }
 }
-
-function setTimeUnit(unit) {
-  state.cap.timeUnit = unit;
-  document.getElementById('c-dur-unit').textContent = unit;
-  document.querySelectorAll('#panel-capacity .form-grid .field:first-child .unit-pill').forEach(p => {
-    p.classList.toggle('active', p.textContent.trim() === unit);
-  });
-  computeCapacity();
-}
-
+function setTimeUnit(unit) { state.cap.timeUnit = unit; document.getElementById('c-dur-unit').textContent = unit; computeCapacity(); }
 function setReqUnit(field, unit) {
   state.req[field + 'Unit'] = unit;
   document.getElementById('r-' + field + '-unit').textContent = unit;
-  // Update active pill
-  const fieldEl = document.getElementById('r-' + field).closest('.field');
-  fieldEl.querySelectorAll('.unit-pill').forEach(p => {
-    p.classList.toggle('active', p.textContent.trim() === unit);
-  });
   computeRequests();
+  computeBandwidthToRequests();
 }
-
+function setBtrUnit(unit) {
+  state.btr.bwUnit = unit;
+  document.getElementById('btr-bw-unit').textContent = unit;
+  computeBandwidthToRequests();
+}
 function updateOverhead(panel) {
   const val = document.getElementById(panel + '-overhead').value;
   document.getElementById(panel + '-overhead-val').textContent = val + '%';
-  if (panel === 't') state.time.overhead = Number(val);
-  else state.cap.overhead = Number(val);
+  if (panel === 't') state.time.overhead = Number(val); else state.cap.overhead = Number(val);
+}
+function updateOverheadBtr() {
+  const val = document.getElementById('btr-overhead').value;
+  document.getElementById('btr-overhead-val').textContent = val + '%';
+  state.btr.overhead = Number(val);
 }
 
-function setSpeed(val, unit) {
-  setBwUnit('time', unit);
-  document.getElementById('t-bandwidth').value = val;
-  computeTime();
-}
-
-function setSpeedCap(val, unit) {
-  setBwUnit('cap', unit);
-  document.getElementById('c-bandwidth').value = val;
-  computeCapacity();
-}
-
-// ===== SERVICE COST PRESETS =====
 const serviceCosts = {
-  oci:    { costPer10k: 0.0085, currency: '€', hint: 'OCI: ~€0.0085 per 10k richieste PUT/POST' },
-  s3:     { costPer10k: 0.005,  currency: '$', hint: 'AWS S3: ~$0.005 per 1.000 PUT (=$0.05/10k) — Standard' },
-  azure:  { costPer10k: 0.0065, currency: '€', hint: 'Azure Blob: ~€0.0065 per 10k operazioni di scrittura' },
-  custom: { costPer10k: null,   currency: '€', hint: 'Inserisci il costo per 10.000 PUT del tuo provider' }
+  oci: { costPer10k: 0.0085, currency: '€' },
+  s3: { costPer10k: 0.05, currency: '$' },
+  azure: { costPer10k: 0.0065, currency: '€' },
+  custom: { costPer10k: null, currency: '€' }
 };
-
 function updateServiceCosts() {
   const svc = document.getElementById('r-service').value;
   const cfg = serviceCosts[svc];
-  if (cfg.costPer10k !== null) {
-    document.getElementById('r-cost-per-10k').value = cfg.costPer10k;
-  }
+  if (cfg.costPer10k !== null) document.getElementById('r-cost-per-10k').value = cfg.costPer10k;
   document.getElementById('r-currency').textContent = cfg.currency;
-  document.getElementById('r-cost-hint').textContent = cfg.hint;
 }
 
-// ===== PROFILE PRESETS =====
-function applyProfile(name) {
-  const profiles = {
-    'veeam-oci': {
-      totalsize: 500, totalsizeUnit: 'GB',
-      filesize: 1, filesizeUnit: 'GB',
-      partsize: 100, threshold: 5, thresholdUnit: 'GB',
-      service: 'oci'
-    },
-    'veeam-s3': {
-      totalsize: 500, totalsizeUnit: 'GB',
-      filesize: 500, filesizeUnit: 'MB',
-      partsize: 64, threshold: 5, thresholdUnit: 'GB',
-      service: 's3'
-    },
-    'files-small': {
-      totalsize: 10, totalsizeUnit: 'GB',
-      filesize: 5, filesizeUnit: 'MB',
-      partsize: 100, threshold: 5, thresholdUnit: 'GB',
-      service: 'oci'
-    },
-    'files-large': {
-      totalsize: 1, totalsizeUnit: 'TB',
-      filesize: 10, filesizeUnit: 'GB',
-      partsize: 256, threshold: 5, thresholdUnit: 'GB',
-      service: 'oci'
-    }
-  };
-  const p = profiles[name];
-  if (!p) return;
-
-  document.getElementById('r-totalsize').value = p.totalsize;
-  setReqUnit('totalsize', p.totalsizeUnit);
-  document.getElementById('r-filesize').value = p.filesize;
-  setReqUnit('filesize', p.filesizeUnit);
-  document.getElementById('r-partsize').value = p.partsize;
-  document.getElementById('r-threshold').value = p.threshold;
-  setReqUnit('threshold', p.thresholdUnit);
-  document.getElementById('r-service').value = p.service;
-  updateServiceCosts();
-  computeRequests();
-}
-
-// ===== HELPERS =====
 function toBytesPerSec(bw, unit) {
   const bitsPerSec = unit === 'kbps' ? bw * 1e3 : unit === 'Mbps' ? bw * 1e6 : bw * 1e9;
   return bitsPerSec / 8;
 }
-
 function toBytes(size, unit) {
   if (unit === 'MB') return size * 1e6;
   if (unit === 'GB') return size * 1e9;
   if (unit === 'TB') return size * 1e12;
   return size;
 }
-
 function toSeconds(dur, unit) {
-  if (unit === 'min')    return dur * 60;
-  if (unit === 'ore')   return dur * 3600;
+  if (unit === 'min') return dur * 60;
+  if (unit === 'ore') return dur * 3600;
   if (unit === 'giorni') return dur * 86400;
   return dur;
 }
-
 function formatBytes(bytes) {
-  if (bytes < 1e6)  return { val: (bytes / 1e3).toFixed(2), unit: 'KB' };
-  if (bytes < 1e9)  return { val: (bytes / 1e6).toFixed(2), unit: 'MB' };
+  if (bytes < 1e6) return { val: (bytes / 1e3).toFixed(2), unit: 'KB' };
+  if (bytes < 1e9) return { val: (bytes / 1e6).toFixed(2), unit: 'MB' };
   if (bytes < 1e12) return { val: (bytes / 1e9).toFixed(2), unit: 'GB' };
   return { val: (bytes / 1e12).toFixed(2), unit: 'TB' };
 }
-
-function formatTime(seconds) {
-  if (seconds < 60)    return { val: seconds.toFixed(1), unit: 'secondi' };
-  if (seconds < 3600)  return { val: (seconds / 60).toFixed(1), unit: 'minuti' };
-  if (seconds < 86400) return { val: (seconds / 3600).toFixed(2), unit: 'ore' };
-  const days = Math.floor(seconds / 86400);
-  const hours = ((seconds % 86400) / 3600).toFixed(1);
-  return { val: days + 'g ' + hours + 'h', unit: '' };
-}
-
 function formatTimeFull(seconds) {
   const d = Math.floor(seconds / 86400);
   const h = Math.floor((seconds % 86400) / 3600);
@@ -1103,7 +830,6 @@ function formatTimeFull(seconds) {
   if (s > 0 || parts.length === 0) parts.push(s + ' sec');
   return parts.join(', ');
 }
-
 function fmtNum(n) {
   if (n >= 1e9) return (n / 1e9).toFixed(2) + ' B';
   if (n >= 1e6) return (n / 1e6).toFixed(2) + ' M';
@@ -1111,242 +837,86 @@ function fmtNum(n) {
   return n.toFixed(0);
 }
 
-// ===== COMPUTE TIME =====
 function computeTime() {
   const dataSizeRaw = parseFloat(document.getElementById('t-datasize').value);
   const bwRaw = parseFloat(document.getElementById('t-bandwidth').value);
   const el = document.getElementById('t-result-content');
-
-  if (isNaN(dataSizeRaw) || isNaN(bwRaw) || dataSizeRaw <= 0 || bwRaw <= 0) {
-    el.innerHTML = `<div class="empty-state">
-      <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      <h3>Inserisci i parametri</h3>
-      <p>Compila i campi sopra per vedere la stima del tempo di trasferimento.</p>
-    </div>`;
-    return;
-  }
-
-  const overhead = state.time.overhead / 100;
+  if (isNaN(dataSizeRaw) || isNaN(bwRaw) || dataSizeRaw <= 0 || bwRaw <= 0) return;
   const dataBytes = toBytes(dataSizeRaw, state.time.dataUnit);
-  const bwBytesPerSec = toBytesPerSec(bwRaw, state.time.bwUnit) * (1 - overhead);
-  const secondsRaw = dataBytes / toBytesPerSec(bwRaw, state.time.bwUnit);
+  const bwBytesPerSec = toBytesPerSec(bwRaw, state.time.bwUnit) * (1 - state.time.overhead / 100);
   const secondsNet = dataBytes / bwBytesPerSec;
-
-  const tRaw = formatTime(secondsRaw);
-  const tNet = formatTime(secondsNet);
   const tFull = formatTimeFull(secondsNet);
-  const effBw = formatBytes(bwBytesPerSec);
-
-  el.innerHTML = `
-    <div class="results-grid animate-in">
-      <div class="result-card highlight">
-        <div class="result-label">Tempo stimato (con overhead)</div>
-        <div class="result-value count-anim">${tNet.val}<span class="unit">${tNet.unit}</span></div>
-        <div class="result-sub">${tFull}</div>
-      </div>
-      <div class="result-card blue-bg">
-        <div class="result-label">Tempo teorico (senza overhead)</div>
-        <div class="result-value count-anim">${tRaw.val}<span class="unit">${tRaw.unit}</span></div>
-        <div class="result-sub">A banda piena dichiarata</div>
-      </div>
-      <div class="result-card">
-        <div class="result-label">Banda effettiva disponibile</div>
-        <div class="result-value count-anim">${effBw.val}<span class="unit">${effBw.unit}/s</span></div>
-        <div class="result-sub">Overhead ${state.time.overhead}% sottratto</div>
-      </div>
-      <div class="result-card warn-bg">
-        <div class="result-label">Overhead incidenza</div>
-        <div class="result-value count-anim">+${(state.time.overhead).toFixed(0)}<span class="unit">%</span></div>
-        <div class="result-sub">Tempo aggiuntivo rispetto al teorico</div>
-      </div>
-    </div>
-    <div class="breakdown" style="margin-top: var(--space-4);">
-      <div class="breakdown-title">Dettaglio calcolo</div>
-      <div class="breakdown-row"><span class="bk-label">Dati da trasferire</span><span class="bk-val">${dataSizeRaw} ${state.time.dataUnit} = ${(dataBytes/1e9).toFixed(4)} GB</span></div>
-      <div class="breakdown-row"><span class="bk-label">Banda dichiarata</span><span class="bk-val">${bwRaw} ${state.time.bwUnit}</span></div>
-      <div class="breakdown-row"><span class="bk-label">Overhead protocollo</span><span class="bk-val">${state.time.overhead}%</span></div>
-      <div class="breakdown-row"><span class="bk-label">Banda effettiva</span><span class="bk-val">${(bwBytesPerSec*8/1e6).toFixed(2)} Mbps</span></div>
-      <div class="breakdown-row"><span class="bk-label">Velocità di trasferimento</span><span class="bk-val">${effBw.val} ${effBw.unit}/s</span></div>
-      <div class="breakdown-row"><span class="bk-label">Tempo totale stimato</span><span class="bk-val">${tFull}</span></div>
-    </div>`;
+  el.innerHTML = `<div class="result-card highlight"><div class="result-label">Tempo stimato</div><div class="result-value">${tFull}</div></div>`;
 }
 
-// ===== COMPUTE CAPACITY =====
 function computeCapacity() {
   const durRaw = parseFloat(document.getElementById('c-duration').value);
   const bwRaw = parseFloat(document.getElementById('c-bandwidth').value);
   const el = document.getElementById('c-result-content');
-
-  if (isNaN(durRaw) || isNaN(bwRaw) || durRaw <= 0 || bwRaw <= 0) {
-    el.innerHTML = `<div class="empty-state">
-      <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      <h3>Inserisci i parametri</h3>
-      <p>Compila i campi sopra per vedere quanti dati puoi trasferire nel tempo indicato.</p>
-    </div>`;
-    return;
-  }
-
-  const overhead = state.cap.overhead / 100;
+  if (isNaN(durRaw) || isNaN(bwRaw) || durRaw <= 0 || bwRaw <= 0) return;
   const seconds = toSeconds(durRaw, state.cap.timeUnit);
-  const bwBytesPerSec = toBytesPerSec(bwRaw, state.cap.bwUnit) * (1 - overhead);
-  const bwBytesPerSecRaw = toBytesPerSec(bwRaw, state.cap.bwUnit);
+  const bwBytesPerSec = toBytesPerSec(bwRaw, state.cap.bwUnit) * (1 - state.cap.overhead / 100);
   const totalBytesNet = bwBytesPerSec * seconds;
-  const totalBytesRaw = bwBytesPerSecRaw * seconds;
-
   const capNet = formatBytes(totalBytesNet);
-  const capRaw = formatBytes(totalBytesRaw);
-  const effBw = formatBytes(bwBytesPerSec);
-  const gbNet = totalBytesNet / 1e9;
-  const tbNet = totalBytesNet / 1e12;
-
-  el.innerHTML = `
-    <div class="results-grid animate-in">
-      <div class="result-card highlight">
-        <div class="result-label">Dati trasferibili (con overhead)</div>
-        <div class="result-value count-anim">${capNet.val}<span class="unit">${capNet.unit}</span></div>
-        <div class="result-sub">${gbNet.toFixed(3)} GB totali</div>
-      </div>
-      <div class="result-card blue-bg">
-        <div class="result-label">Dati teorici (senza overhead)</div>
-        <div class="result-value count-anim">${capRaw.val}<span class="unit">${capRaw.unit}</span></div>
-        <div class="result-sub">A banda piena dichiarata</div>
-      </div>
-      <div class="result-card success-bg">
-        <div class="result-label">Banda effettiva</div>
-        <div class="result-value count-anim">${effBw.val}<span class="unit">${effBw.unit}/s</span></div>
-        <div class="result-sub">Overhead ${state.cap.overhead}% sottratto</div>
-      </div>
-      <div class="result-card warn-bg">
-        <div class="result-label">Tempo disponibile</div>
-        <div class="result-value count-anim">${durRaw}<span class="unit">${state.cap.timeUnit}</span></div>
-        <div class="result-sub">${seconds.toLocaleString('it')} secondi totali</div>
-      </div>
-    </div>
-    <div class="breakdown" style="margin-top: var(--space-4);">
-      <div class="breakdown-title">Dettaglio calcolo</div>
-      <div class="breakdown-row"><span class="bk-label">Finestra temporale</span><span class="bk-val">${durRaw} ${state.cap.timeUnit} = ${seconds.toLocaleString('it')} secondi</span></div>
-      <div class="breakdown-row"><span class="bk-label">Banda dichiarata</span><span class="bk-val">${bwRaw} ${state.cap.bwUnit}</span></div>
-      <div class="breakdown-row"><span class="bk-label">Overhead protocollo</span><span class="bk-val">${state.cap.overhead}%</span></div>
-      <div class="breakdown-row"><span class="bk-label">Banda effettiva</span><span class="bk-val">${(bwBytesPerSec*8/1e6).toFixed(2)} Mbps</span></div>
-      <div class="breakdown-row"><span class="bk-label">Totale trasferibile (netto)</span><span class="bk-val">${capNet.val} ${capNet.unit} (${gbNet.toFixed(3)} GB)</span></div>
-      <div class="breakdown-row"><span class="bk-label">Espresso in TB</span><span class="bk-val">${tbNet.toFixed(4)} TB</span></div>
-    </div>`;
+  el.innerHTML = `<div class="result-card highlight"><div class="result-label">Dati trasferibili</div><div class="result-value">${capNet.val}<span class="unit">${capNet.unit}</span></div></div>`;
 }
 
-// ===== COMPUTE REQUESTS =====
 function computeRequests() {
-  const totalRaw   = parseFloat(document.getElementById('r-totalsize').value);
-  const fileSzRaw  = parseFloat(document.getElementById('r-filesize').value);
-  const partSizeMB = parseFloat(document.getElementById('r-partsize').value);
-  const threshRaw  = parseFloat(document.getElementById('r-threshold').value);
+  const totalRaw = parseFloat(document.getElementById('r-totalsize').value);
+  const fileSzRaw = parseFloat(document.getElementById('r-filesize').value);
+  const partSizeMB = parseFloat(document.getElementById('r-partsize').value) || 100;
+  const threshRaw = parseFloat(document.getElementById('r-threshold').value) || 5;
   const costPer10k = parseFloat(document.getElementById('r-cost-per-10k').value);
-  const currency   = document.getElementById('r-currency').textContent;
-  const el         = document.getElementById('r-result-content');
-
-  if (isNaN(totalRaw) || isNaN(fileSzRaw) || totalRaw <= 0 || fileSzRaw <= 0) {
-    el.innerHTML = `<div class="empty-state">
-      <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      <h3>Inserisci i parametri</h3>
-      <p>Compila dimensione totale e dimensione media per file per stimare le richieste API.</p>
-    </div>`;
-    return;
-  }
-
-  const totalBytes    = toBytes(totalRaw, state.req.totalsizeUnit);
+  const currency = document.getElementById('r-currency').textContent;
+  const el = document.getElementById('r-result-content');
+  if (isNaN(totalRaw) || isNaN(fileSzRaw) || totalRaw <= 0 || fileSzRaw <= 0) return;
+  const totalBytes = toBytes(totalRaw, state.req.totalsizeUnit);
   const fileSizeBytes = toBytes(fileSzRaw, state.req.filesizeUnit);
-  const partSizeBytes = (partSizeMB || 100) * 1e6;
-  const threshBytes   = toBytes(threshRaw || 5, state.req.thresholdUnit);
-
-  // Number of objects
+  const partSizeBytes = partSizeMB * 1e6;
+  const threshBytes = toBytes(threshRaw, state.req.thresholdUnit);
   const numObjects = Math.ceil(totalBytes / fileSizeBytes);
-
-  // Split into single-PUT vs multipart
   const isMultipart = fileSizeBytes > threshBytes;
-
-  let totalPutRequests = 0;
-  let initiateRequests = 0;
-  let partRequests     = 0;
-  let commitRequests   = 0;
-  let singlePutObjects = 0;
-  let multipartObjects = 0;
-
-  if (isMultipart) {
-    // All objects use multipart
-    multipartObjects = numObjects;
-    const partsPerObject = Math.ceil(fileSizeBytes / partSizeBytes);
-    initiateRequests = numObjects;         // 1 InitiateMultipartUpload per object
-    partRequests     = numObjects * partsPerObject; // 1 PUT per part
-    commitRequests   = numObjects;         // 1 CommitMultipartUpload per object
-    totalPutRequests = initiateRequests + partRequests + commitRequests;
-  } else {
-    // All objects use single PUT
-    singlePutObjects = numObjects;
-    totalPutRequests = numObjects;
-  }
-
+  let totalPutRequests = isMultipart ? numObjects * (2 + Math.ceil(fileSizeBytes / partSizeBytes)) : numObjects;
   const estCost = isNaN(costPer10k) ? null : (totalPutRequests / 10000) * costPer10k;
-  const costStr = estCost !== null ? estCost.toFixed(4) + ' ' + currency : 'N/D';
-  const costSub = estCost !== null
-    ? (estCost < 0.01 ? 'Costo trascurabile' : estCost < 1 ? 'Costo basso' : 'Verificare piano tariffario')
-    : '';
+  el.innerHTML = `<div class="results-grid"><div class="result-card highlight"><div class="result-label">Oggetti / File totali</div><div class="result-value">${fmtNum(numObjects)}</div></div><div class="result-card purple-bg"><div class="result-label">PUT Request totali</div><div class="result-value">${fmtNum(totalPutRequests)}</div></div><div class="result-card orange-bg"><div class="result-label">Costo stimato</div><div class="result-value">${estCost !== null ? estCost.toFixed(4) + ' ' + currency : 'N/D'}</div></div></div>`;
+}
 
-  const uploadType = isMultipart ? 'Multipart Upload' : 'PUT Singolo';
-  const uploadBadge = isMultipart
-    ? `<span class="badge warn">⚡ Multipart</span>`
-    : `<span class="badge">✓ PUT Singolo</span>`;
+function computeBandwidthToRequests() {
+  const bwRaw = parseFloat(document.getElementById('btr-bandwidth').value);
+  const usagePct = parseFloat(document.getElementById('btr-usagepct').value) || 70;
+  const ociLimit = parseFloat(document.getElementById('btr-oci-limit').value) || 10000;
+  const fileSzRaw = parseFloat(document.getElementById('r-filesize').value);
+  const el = document.getElementById('btr-result-content');
+  if (isNaN(bwRaw) || bwRaw <= 0) return;
 
-  const partsPerObj = isMultipart ? Math.ceil(fileSizeBytes / partSizeBytes) : 1;
+  const bwBytesPerSec = toBytesPerSec(bwRaw, state.btr.bwUnit) * (1 - state.btr.overhead / 100);
+  const secondsMonth = 30 * 24 * 3600 * (usagePct / 100);
+  const totalBytesMonth = bwBytesPerSec * secondsMonth;
+  const capMonth = formatBytes(totalBytesMonth);
+  const day = formatBytes(totalBytesMonth / 30);
+  const week = formatBytes(totalBytesMonth / 30 * 7);
 
-  el.innerHTML = `
-    <div class="info-box animate-in" style="margin-bottom: var(--space-4);">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <div>
-        Modalità upload: <strong>${uploadType}</strong> ${uploadBadge}
-        — dimensione file media (${(fileSizeBytes/1e9).toFixed(3)} GB)
-        ${isMultipart ? `supera` : `è sotto`} la soglia multipart (${threshRaw} ${state.req.thresholdUnit}).
-        ${isMultipart ? `Ogni oggetto viene suddiviso in <strong>${partsPerObj} parti</strong> da ${partSizeMB} MB.` : ''}
-      </div>
-    </div>
-    <div class="results-grid animate-in">
-      <div class="result-card highlight">
-        <div class="result-label">Oggetti / File totali</div>
-        <div class="result-value count-anim">${fmtNum(numObjects)}<span class="unit">obj</span></div>
-        <div class="result-sub">${numObjects.toLocaleString('it')} oggetti da caricare</div>
-      </div>
-      <div class="result-card purple-bg">
-        <div class="result-label">PUT Request totali</div>
-        <div class="result-value count-anim">${fmtNum(totalPutRequests)}<span class="unit">req</span></div>
-        <div class="result-sub">${totalPutRequests.toLocaleString('it')} richieste PUT/POST</div>
-      </div>
-      <div class="result-card orange-bg">
-        <div class="result-label">Costo stimato (PUT)</div>
-        <div class="result-value count-anim">${costStr}</div>
-        <div class="result-sub">${costSub}</div>
-      </div>
-      <div class="result-card ${isMultipart ? 'warn-bg' : 'success-bg'}">
-        <div class="result-label">Request per oggetto</div>
-        <div class="result-value count-anim">${isMultipart ? (2 + partsPerObj) : 1}<span class="unit">req</span></div>
-        <div class="result-sub">${isMultipart ? `1 initiate + ${partsPerObj} parti + 1 commit` : '1 PUT diretto'}</div>
-      </div>
-    </div>
-    <div class="breakdown" style="margin-top: var(--space-4);">
-      <div class="breakdown-title">Dettaglio calcolo richieste</div>
-      <div class="breakdown-row"><span class="bk-label">Totale dati</span><span class="bk-val">${totalRaw} ${state.req.totalsizeUnit} = ${(totalBytes/1e9).toFixed(3)} GB</span></div>
-      <div class="breakdown-row"><span class="bk-label">Dimensione media file</span><span class="bk-val">${fileSzRaw} ${state.req.filesizeUnit} = ${(fileSizeBytes/1e6).toFixed(1)} MB</span></div>
-      <div class="breakdown-row"><span class="bk-label">Numero oggetti</span><span class="bk-val">${numObjects.toLocaleString('it')}</span></div>
-      <div class="breakdown-row"><span class="bk-label">Soglia multipart</span><span class="bk-val">${threshRaw} ${state.req.thresholdUnit} → modalità: ${uploadType}</span></div>
-      ${isMultipart ? `
-      <div class="breakdown-row"><span class="bk-label">Dim. parte multipart</span><span class="bk-val">${partSizeMB} MB/parte → ${partsPerObj} parti/oggetto</span></div>
-      <div class="breakdown-row"><span class="bk-label">InitiateMultipartUpload</span><span class="bk-val">${initiateRequests.toLocaleString('it')} richieste</span></div>
-      <div class="breakdown-row"><span class="bk-label">PUT Part (dati)</span><span class="bk-val">${partRequests.toLocaleString('it')} richieste</span></div>
-      <div class="breakdown-row"><span class="bk-label">CommitMultipartUpload</span><span class="bk-val">${commitRequests.toLocaleString('it')} richieste</span></div>
-      ` : `
-      <div class="breakdown-row"><span class="bk-label">PUT request (oggetti singoli)</span><span class="bk-val">${singlePutObjects.toLocaleString('it')} richieste</span></div>
-      `}
-      <div class="breakdown-row"><span class="bk-label">TOTALE PUT/POST request</span><span class="bk-val">${totalPutRequests.toLocaleString('it')}</span></div>
-      <div class="breakdown-row"><span class="bk-label">Costo per 10.000 request</span><span class="bk-val">${isNaN(costPer10k) ? 'N/D' : costPer10k + ' ' + currency}</span></div>
-      <div class="breakdown-row"><span class="bk-label">Costo totale stimato</span><span class="bk-val">${costStr}</span></div>
-    </div>`;
+  let requestsHtml = `<div class="results-grid"><div class="result-card highlight"><div class="result-label">Dati / mese</div><div class="result-value">${capMonth.val}<span class="unit">${capMonth.unit}</span></div><div class="result-sub">~${day.val} ${day.unit}/giorno · ~${week.val} ${week.unit}/settimana</div></div>`;
+
+  if (!isNaN(fileSzRaw) && fileSzRaw > 0) {
+    const fileSizeBytes = toBytes(fileSzRaw, state.req.filesizeUnit);
+    const partSizeMB = parseFloat(document.getElementById('r-partsize').value) || 100;
+    const threshRaw = parseFloat(document.getElementById('r-threshold').value) || 5;
+    const threshBytes = toBytes(threshRaw, state.req.thresholdUnit);
+    const partSizeBytes = partSizeMB * 1e6;
+    const numObjects = Math.ceil(totalBytesMonth / fileSizeBytes);
+    const isMultipart = fileSizeBytes > threshBytes;
+    const partsPerObj = isMultipart ? Math.ceil(fileSizeBytes / partSizeBytes) : 1;
+    const putReqs = isMultipart ? numObjects * (2 + partsPerObj) : numObjects;
+    const within = putReqs <= ociLimit;
+    requestsHtml += `<div class="result-card blue-bg"><div class="result-label">PUT request / mese</div><div class="result-value">${fmtNum(putReqs)}</div><div class="result-sub">${isMultipart ? 'Multipart' : 'PUT singolo'}</div></div>`;
+    requestsHtml += `<div class="result-card ${within ? 'success-bg' : 'warn-bg'}"><div class="result-label">Confronto soglia OCI</div><div class="result-value">${within ? 'OK' : 'SUPERA'}</div><div class="result-sub">Limite: ${ociLimit.toLocaleString('it')} req/mese</div></div>`;
+    requestsHtml += `<div class="result-card"><div class="result-label">Oggetti / mese</div><div class="result-value">${fmtNum(numObjects)}</div><div class="result-sub">Dimensione media: ${fileSzRaw} ${state.req.filesizeUnit}</div></div>`;
+    requestsHtml += `</div><div class="breakdown" style="margin-top: var(--space-4);"><div class="breakdown-title">Dettaglio calcolo mensile</div><div class="breakdown-row"><span class="bk-label">Banda dichiarata</span><span class="bk-val">${bwRaw} ${state.btr.bwUnit}</span></div><div class="breakdown-row"><span class="bk-label">Overhead</span><span class="bk-val">${state.btr.overhead}%</span></div><div class="breakdown-row"><span class="bk-label">Utilizzo mensile</span><span class="bk-val">${usagePct}%</span></div><div class="breakdown-row"><span class="bk-label">Oggetti / mese</span><span class="bk-val">${numObjects.toLocaleString('it')}</span></div><div class="breakdown-row"><span class="bk-label">PUT request / mese</span><span class="bk-val">${putReqs.toLocaleString('it')}</span></div></div>`;
+  } else {
+    requestsHtml += `<div class="result-card"><div class="result-label">PUT request / mese</div><div class="result-value">—</div><div class="result-sub">Inserisci la dimensione media file sopra</div></div></div>`;
+  }
+  el.innerHTML = requestsHtml;
 }
 </script>
 </body>
