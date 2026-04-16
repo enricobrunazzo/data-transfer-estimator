@@ -373,6 +373,27 @@ input[type="range"] {
 .speed-pill .sp-name { font-weight: 500; color: var(--color-text); }
 .speed-pill .sp-val { font-family: var(--font-mono); font-weight: 700; color: var(--color-primary); }
 
+/* ===== REQ RANGE FIELD ===== */
+.req-range-wrap {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-top: var(--space-1);
+}
+.req-range-wrap .input-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.req-range-wrap .input-wrap input {
+  min-width: 0;
+  width: 100%;
+}
+.req-range-sep {
+  color: var(--color-text-faint);
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+}
+
 /* ===== ANIMATIONS ===== */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .animate-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -584,15 +605,15 @@ footer { padding-top: var(--space-4); border-top: 1px solid var(--color-divider)
         </div>
         <div class="field">
           <label class="field-label">Request Veeam / TB WAN <span>(range, post-local-dedup)</span></label>
-          <div style="display: flex; gap: var(--space-2); align-items: center; margin-top: var(--space-1);">
-            <div class="input-wrap" style="flex:1">
+          <div class="req-range-wrap">
+            <div class="input-wrap">
               <input type="number" id="vr-req-min" min="100000" step="50000" value="700000" oninput="computeVeeamRequests()">
-              <span class="input-unit" style="font-size:0.65rem; padding-inline: var(--space-2);">min/TB</span>
+              <span class="input-unit">min/TB</span>
             </div>
-            <span style="color: var(--color-text-faint); font-size: var(--text-xs);">—</span>
-            <div class="input-wrap" style="flex:1">
+            <span class="req-range-sep">—</span>
+            <div class="input-wrap">
               <input type="number" id="vr-req-max" min="100000" step="50000" value="900000" oninput="computeVeeamRequests()">
-              <span class="input-unit" style="font-size:0.65rem; padding-inline: var(--space-2);">max/TB</span>
+              <span class="input-unit">max/TB</span>
             </div>
           </div>
           <div class="field-hint">Default: 700K–900K/TB trasferito su WAN. Variabile in base a blocco e tipo dati.</div>
