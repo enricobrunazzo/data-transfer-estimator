@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Transfer Estimator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ===== DESIGN TOKENS ===== */
+:root, [data-theme="light"] {
+  --color-bg: #f7f6f2;
+  --color-surface: #f9f8f5;
+  --color-surface-2: #fbfbf9;
+  --color-surface-offset: #f3f0ec;
+  --color-surface-dynamic: #e6e4df;
+  --color-divider: #dcd9d5;
+  --color-border: #d4d1ca;
+  --color-text: #28251d;
+  --color-text-muted: #7a7974;
+  --color-text-faint: #bab9b4;
+  --color-primary: #01696f;
+  --color-primary-hover: #0c4e54;
+  --color-primary-highlight: #cedcd8;
+  --color-success: #437a22;
+  --color-success-highlight: #d4dfcc;
+  --color-warning: #964219;
+  --color-warning-highlight: #ddcfc6;
+  --color-blue: #006494;
+  --color-blue-highlight: #c6d8e4;
+  --color-orange: #da7101;
+  --color-orange-highlight: #e7d7c4;
+  --color-purple: #7a39bb;
+  --color-purple-highlight: #dacfde;
+  --shadow-sm: 0 1px 2px oklch(0.2 0.01 80 / 0.06);
+  --shadow-md: 0 4px 12px oklch(0.2 0.01 80 / 0.08);
+  --shadow-lg: 0 12px 32px oklch(0.2 0.01 80 / 0.12);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-full: 9999px;
+  --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+  --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+  --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+  --font-body: 'Inter', 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem;
+  --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem;
+  --space-10: 2.5rem; --space-12: 3rem;
+}
+[data-theme="dark"] {
+  --color-bg: #171614;
+  --color-surface: #1c1b19;
+  --color-surface-2: #201f1d;
+  --color-surface-offset: #1d1c1a;
+  --color-surface-dynamic: #2d2c2a;
+  --color-divider: #262523;
+  --color-border: #393836;
+  --color-text: #cdccca;
+  --color-text-muted: #797876;
+  --color-text-faint: #5a5957;
+  --color-primary: #4f98a3;
+  --color-primary-hover: #227f8b;
+  --color-primary-highlight: #313b3b;
+  --color-success: #6daa45;
+  --color-success-highlight: #3a4435;
+  --color-warning: #bb653b;
+  --color-warning-highlight: #564942;
+  --color-blue: #5591c7;
+  --color-blue-highlight: #3a4550;
+  --color-orange: #fdab43;
+  --color-orange-highlight: #564b3e;
+  --color-purple: #a86fdf;
+  --color-purple-highlight: #4e4652;
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.2);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / 0.3);
+  --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.4);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #201f1d;
+    --color-surface-offset: #1d1c1a; --color-surface-dynamic: #2d2c2a;
+    --color-divider: #262523; --color-border: #393836;
+    --color-text: #cdccca; --color-text-muted: #797876; --color-text-faint: #5a5957;
+    --color-primary: #4f98a3; --color-primary-hover: #227f8b; --color-primary-highlight: #313b3b;
+    --color-success: #6daa45; --color-success-highlight: #3a4435;
+    --color-warning: #bb653b; --color-warning-highlight: #564942;
+    --color-blue: #5591c7; --color-blue-highlight: #3a4550;
+    --color-orange: #fdab43; --color-orange-highlight: #564b3e;
+    --color-purple: #a86fdf; --color-purple-highlight: #4e4652;
+  }
+}
+
+/* ===== BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+body {
+  min-height: 100dvh;
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.6;
+}
+input, button, select { font: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: none; }
+a, button, input, select { transition: color var(--transition-interactive), background var(--transition-interactive), border-color var(--transition-interactive), box-shadow var(--transition-interactive); }
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-sm); }
+::selection { background: oklch(from var(--color-primary) l c h / 0.25); }
+
+/* ===== LAYOUT ===== */
+.app {
+  max-width: 900px;
+  margin-inline: auto;
+  padding: var(--space-6) var(--space-4);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* ===== HEADER ===== */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-divider);
+}
+.logo { display: flex; align-items: center; gap: var(--space-3); }
+.logo-icon { width: 36px; height: 36px; color: var(--color-primary); flex-shrink: 0; }
+.logo-text { display: flex; flex-direction: column; gap: 1px; }
+.logo-title { font-size: var(--text-sm); font-weight: 700; color: var(--color-text); letter-spacing: -0.01em; line-height: 1.2; }
+.logo-sub { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.2; }
+.theme-toggle {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-full);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+.theme-toggle:hover { color: var(--color-text); background: var(--color-surface-dynamic); }
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  gap: var(--space-1);
+  background: var(--color-surface);
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+.tab-btn {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border-radius: calc(var(--radius-lg) - var(--space-1));
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-align: center;
+  line-height: 1.4;
+  transition: all var(--transition-interactive);
+}
+.tab-btn:hover { color: var(--color-text); background: var(--color-surface-dynamic); }
+.tab-btn.active { background: var(--color-primary); color: #fff; font-weight: 600; }
+
+/* ===== PANELS ===== */
+.panel { display: none; flex-direction: column; gap: var(--space-6); }
+.panel.active { display: flex; }
+
+/* ===== CARD ===== */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+.card-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.card-title svg { color: var(--color-primary); }
+
+/* ===== FORM GRID ===== */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+@media (max-width: 580px) { .form-grid { grid-template-columns: 1fr; } }
+
+.field { display: flex; flex-direction: column; gap: var(--space-2); }
+.field-label { font-size: var(--text-xs); font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.field-label span { font-weight: 400; text-transform: none; color: var(--color-text-faint); letter-spacing: 0; }
+.input-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color var(--transition-interactive), box-shadow var(--transition-interactive);
+}
+.input-wrap:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px oklch(from var(--color-primary) l c h / 0.15);
+}
+.input-wrap input {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  font-size: var(--text-base);
+  font-family: var(--font-mono);
+  color: var(--color-text);
+  outline: none;
+  min-width: 0;
+}
+.input-wrap input::placeholder { color: var(--color-text-faint); }
+.input-unit {
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-offset);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  border-left: 1px solid var(--color-border);
+}
+.field-hint { font-size: var(--text-xs); color: var(--color-text-faint); }
+
+/* ===== SELECT STYLED ===== */
+.input-wrap select {
+  flex: 1;
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* ===== UNIT SELECTOR ===== */
+.unit-group { display: flex; gap: var(--space-1); flex-wrap: wrap; }
+.unit-pill {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-offset);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-interactive);
+}
+.unit-pill:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.unit-pill.active { background: var(--color-primary-highlight); border-color: var(--color-primary); color: var(--color-primary); }
+
+/* ===== OVERHEAD SLIDER ===== */
+.overhead-row { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-2); }
+.overhead-label { font-size: var(--text-xs); color: var(--color-text-muted); white-space: nowrap; }
+input[type="range"] {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--radius-full);
+  accent-color: var(--color-primary);
+  background: var(--color-surface-dynamic);
+  cursor: pointer;
+}
+.overhead-val { font-size: var(--text-xs); font-family: var(--font-mono); font-weight: 600; color: var(--color-warning); min-width: 38px; text-align: right; }
+
+/* ===== CALCULATE BUTTON ===== */
+.btn-calc {
+  width: 100%;
+  padding: var(--space-4);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: var(--text-base);
+  font-weight: 600;
+  border-radius: var(--radius-lg);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  transition: background var(--transition-interactive), transform var(--transition-interactive), box-shadow var(--transition-interactive);
+}
+.btn-calc:hover { background: var(--color-primary-hover); box-shadow: var(--shadow-md); }
+.btn-calc:active { transform: scale(0.98); }
+
+/* ===== RESULTS ===== */
+.results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); }
+.result-card {
+  background: var(--color-surface-offset);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  transition: box-shadow var(--transition-interactive);
+}
+.result-card:hover { box-shadow: var(--shadow-md); }
+.result-label { font-size: var(--text-xs); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); }
+.result-value { font-size: var(--text-xl); font-family: var(--font-mono); font-weight: 700; color: var(--color-primary); line-height: 1.1; font-variant-numeric: tabular-nums lining-nums; letter-spacing: -0.02em; }
+.result-value .unit { font-size: var(--text-sm); font-weight: 500; color: var(--color-text-muted); margin-left: var(--space-1); }
+.result-sub { font-size: var(--text-xs); color: var(--color-text-faint); }
+
+.result-card.highlight { background: var(--color-primary-highlight); border-color: var(--color-primary); }
+.result-card.highlight .result-value { color: var(--color-primary); }
+.result-card.success-bg { background: var(--color-success-highlight); border-color: var(--color-success); }
+.result-card.success-bg .result-value { color: var(--color-success); }
+.result-card.warn-bg { background: var(--color-warning-highlight); border-color: var(--color-warning); }
+.result-card.warn-bg .result-value { color: var(--color-warning); }
+.result-card.blue-bg { background: var(--color-blue-highlight); border-color: var(--color-blue); }
+.result-card.blue-bg .result-value { color: var(--color-blue); }
+.result-card.orange-bg { background: var(--color-orange-highlight); border-color: var(--color-orange); }
+.result-card.orange-bg .result-value { color: var(--color-orange); }
+.result-card.purple-bg { background: var(--color-purple-highlight); border-color: var(--color-purple); }
+.result-card.purple-bg .result-value { color: var(--color-purple); }
+
+/* ===== BREAKDOWN TABLE ===== */
+.breakdown { background: var(--color-surface-2); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; }
+.breakdown-title { font-size: var(--text-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-divider); background: var(--color-surface-offset); }
+.breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3) var(--space-5); border-bottom: 1px solid var(--color-divider); font-size: var(--text-sm); }
+.breakdown-row:last-child { border-bottom: none; }
+.breakdown-row .bk-label { color: var(--color-text-muted); }
+.breakdown-row .bk-val { font-family: var(--font-mono); font-weight: 600; color: var(--color-text); font-variant-numeric: tabular-nums; }
+
+/* ===== BADGE ===== */
+.badge { display: inline-flex; align-items: center; gap: var(--space-1); padding: 2px var(--space-2); border-radius: var(--radius-full); font-size: var(--text-xs); font-weight: 600; background: var(--color-primary-highlight); color: var(--color-primary); border: 1px solid var(--color-primary); }
+.badge.warn { background: var(--color-warning-highlight); color: var(--color-warning); border-color: var(--color-warning); }
+.badge.orange { background: var(--color-orange-highlight); color: var(--color-orange); border-color: var(--color-orange); }
+
+/* ===== INFO BOX ===== */
+.info-box {
+  background: var(--color-blue-highlight);
+  border: 1px solid var(--color-blue);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.info-box svg { color: var(--color-blue); flex-shrink: 0; margin-top: 2px; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state { display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--space-12) var(--space-8); color: var(--color-text-muted); gap: var(--space-3); }
+.empty-icon { color: var(--color-text-faint); }
+.empty-state h3 { color: var(--color-text); font-size: var(--text-base); font-weight: 600; }
+.empty-state p { font-size: var(--text-sm); color: var(--color-text-muted); max-width: 36ch; }
+
+/* ===== SPEED REFERENCE ===== */
+.speed-ref { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-xl); padding: var(--space-5) var(--space-6); box-shadow: var(--shadow-sm); }
+.speed-ref-title { font-size: var(--text-xs); font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-3); }
+.speed-pills { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.speed-pill { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); font-size: var(--text-xs); background: var(--color-surface-offset); border: 1px solid var(--color-border); cursor: pointer; transition: all var(--transition-interactive); }
+.speed-pill:hover { border-color: var(--color-primary); background: var(--color-primary-highlight); }
+.speed-pill .sp-name { font-weight: 500; color: var(--color-text); }
+.speed-pill .sp-val { font-family: var(--font-mono); font-weight: 700; color: var(--color-primary); }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.animate-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+@keyframes countUp { from { opacity: 0.3; } to { opacity: 1; } }
+.count-anim { animation: countUp 0.4s ease forwards; }
+
+/* ===== FOOTER ===== */
+footer { padding-top: var(--space-4); border-top: 1px solid var(--color-divider); font-size: var(--text-xs); color: var(--color-text-faint); text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="logo">
+      <svg class="logo-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Data Transfer Estimator logo">
+        <path d="M9 24a6 6 0 0 1 0-12 8 8 0 0 1 15.83-2A5 5 0 0 1 28 20h-1a6 6 0 0 1-6 6H9z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/>
+        <path d="M18 14v10M14 21l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="logo-text">
+        <div class="logo-title">Data Transfer Estimator</div>
+        <div class="logo-sub">Stima tempi, capacità e API request</div>
+      </div>
+    </div>
+    <button class="theme-toggle" data-theme-toggle aria-label="Cambia tema">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" role="tab" aria-selected="true" onclick="switchTab('time')">⏱ Stima il Tempo</button>
+    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('capacity')">📦 Stima la Capacità</button>
+    <button class="tab-btn" role="tab" aria-selected="false" onclick="switchTab('requests')">📡 API Requests</button>
+  </div>
+
+  <!-- TAB: STIMA TEMPO -->
+  <div id="panel-time" class="panel active">
+    <div class="card">
+      <div class="card-title">Parametri di Trasferimento</div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="t-datasize">Dati da trasferire</label>
+          <div class="input-wrap"><input type="number" id="t-datasize" placeholder="es. 100" min="0" step="any" oninput="computeTime()"><span class="input-unit" id="t-datasize-unit">GB</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setDataUnit('MB')">MB</button><button class="unit-pill active" onclick="setDataUnit('GB')">GB</button><button class="unit-pill" onclick="setDataUnit('TB')">TB</button></div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="t-bandwidth">Banda upload cliente <span>(velocità effettiva)</span></label>
+          <div class="input-wrap"><input type="number" id="t-bandwidth" placeholder="es. 100" min="0" step="any" oninput="computeTime()"><span class="input-unit" id="t-bw-unit">Mbps</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setBwUnit('time','kbps')">kbps</button><button class="unit-pill active" onclick="setBwUnit('time','Mbps')">Mbps</button><button class="unit-pill" onclick="setBwUnit('time','Gbps')">Gbps</button></div>
+        </div>
+      </div>
+      <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-divider);">
+        <div class="field-label">Overhead di protocollo <span>(TCP, TLS, metadata)</span></div>
+        <div class="overhead-row"><span class="overhead-label">0%</span><input type="range" id="t-overhead" min="0" max="40" value="10" oninput="updateOverhead('t'); computeTime()"><span class="overhead-label">40%</span><span class="overhead-val" id="t-overhead-val">10%</span></div>
+        <div class="field-hint">Riduce la banda effettiva disponibile. Tipicamente 5–15% per connessioni standard.</div>
+      </div>
+    </div>
+    <div class="card" id="t-results"><div class="card-title">Risultato</div><div id="t-result-content"><div class="empty-state"><h3>Inserisci i parametri</h3><p>Compila i campi sopra per vedere la stima del tempo di trasferimento.</p></div></div></div>
+  </div>
+
+  <!-- TAB: STIMA CAPACITA -->
+  <div id="panel-capacity" class="panel">
+    <div class="card">
+      <div class="card-title">Finestra Temporale e Banda</div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="c-duration">Lasso di tempo disponibile</label>
+          <div class="input-wrap"><input type="number" id="c-duration" placeholder="es. 8" min="0" step="any" oninput="computeCapacity()"><span class="input-unit" id="c-dur-unit">ore</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setTimeUnit('min')">min</button><button class="unit-pill active" onclick="setTimeUnit('ore')">ore</button><button class="unit-pill" onclick="setTimeUnit('giorni')">giorni</button></div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="c-bandwidth">Banda upload cliente <span>(velocità effettiva)</span></label>
+          <div class="input-wrap"><input type="number" id="c-bandwidth" placeholder="es. 100" min="0" step="any" oninput="computeCapacity()"><span class="input-unit" id="c-bw-unit2">Mbps</span></div>
+          <div class="unit-group" style="margin-top: var(--space-1);"><button class="unit-pill" onclick="setBwUnit('cap','kbps')">kbps</button><button class="unit-pill active" onclick="setBwUnit('cap','Mbps')">Mbps</button><button class="unit-pill" onclick="setBwUnit('cap','Gbps')">Gbps</button></div>
+        </div>
+      </div>
+      <div style="margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--color-divider);">
+        <div class="field-label">Overhead di protocollo <span>(TCP, TLS, metadata)</span></div>
+        <div class="overhead-row"><span class="overhead-label">0%</span><input type="range" id="c-overhead" min="0" max="40" value="10" oninput="updateOverhead('c'); computeCapacity()"><span class="overhead-label">40%</span><span class="overhead-val" id="c-overhead-val">10%</span></div>
+      </div>
+    </div>
+    <div class="card" id="c-results"><div class="card-title">Capacità Stimata</div><div id="c-result-content"><div class="empty-state"><h3>Inserisci i parametri</h3><p>Compila i campi sopra per vedere quanti dati puoi trasferire nel tempo indicato.</p></div></div></div>
+  </div>
+
+  <!-- TAB: API REQUESTS VEEAM + OCI B91627 -->
+  <div id="panel-requests" class="panel">
+
+    <div class="info-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div>
+        <strong>SKU B91627 — OCI Object Storage Requests</strong><br>
+        Ogni unità contrattualizzata = <strong>10.000 request/mese</strong>.
+        Il cliente ha contrattualizzato <strong id="info-units-display">1.000 unità → 10.000.000 req/mese</strong>.
+        I risultati mostrano quante unità B91627 servono realmente in base alla banda e al comportamento Veeam.
+      </div>
+    </div>
+
+    <!-- Card 1: Banda -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Banda Upload e Trasferimento
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="vr-bandwidth">Banda upload cliente <span>(uplink)</span></label>
+          <div class="input-wrap">
+            <input type="number" id="vr-bandwidth" placeholder="es. 100" min="0" step="any" oninput="computeVeeamRequests()">
+            <span class="input-unit" id="vr-bw-unit">Mbps</span>
+          </div>
+          <div class="unit-group" style="margin-top: var(--space-1);">
+            <button class="unit-pill" onclick="setVrUnit('bw','kbps',this)">kbps</button>
+            <button class="unit-pill active" onclick="setVrUnit('bw','Mbps',this)">Mbps</button>
+            <button class="unit-pill" onclick="setVrUnit('bw','Gbps',this)">Gbps</button>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Overhead di protocollo <span>(TCP/TLS/Veeam)</span></label>
+          <div class="overhead-row">
+            <span class="overhead-label">0%</span>
+            <input type="range" id="vr-overhead" min="0" max="40" value="10" oninput="updateVrOverhead(); computeVeeamRequests()">
+            <span class="overhead-label">40%</span>
+            <span class="overhead-val" id="vr-overhead-val">10%</span>
+          </div>
+          <div class="field-hint">Riduce la banda netta effettiva disponibile. Tipicamente 10–20% per Veeam su WAN.</div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="vr-totaldata">Totale dati da trasferire <span>(sorgente, pre-dedup)</span></label>
+          <div class="input-wrap">
+            <input type="number" id="vr-totaldata" placeholder="es. 100" min="0" step="any" oninput="computeVeeamRequests()">
+            <span class="input-unit" id="vr-total-unit">TB</span>
+          </div>
+          <div class="unit-group" style="margin-top: var(--space-1);">
+            <button class="unit-pill" onclick="setVrUnit('total','GB',this)">GB</button>
+            <button class="unit-pill active" onclick="setVrUnit('total','TB',this)">TB</button>
+          </div>
+          <div class="field-hint">Dataset sorgente totale prima di qualsiasi ottimizzazione.</div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="vr-usagepct">Utilizzo attivo della banda <span>(% del mese)</span></label>
+          <div class="input-wrap">
+            <input type="number" id="vr-usagepct" min="1" max="100" step="1" value="70" oninput="computeVeeamRequests()">
+            <span class="input-unit">%</span>
+          </div>
+          <div class="field-hint">% del mese in cui Veeam usa attivamente la banda (es. 70% ≈ 21 giorni/mese attivi).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Storage Optimization -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Storage Optimization — Dedup &amp; Blocchi
+      </div>
+      <div class="info-box" style="margin-bottom: var(--space-4);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <div>Veeam applica deduplicazione <strong>Local (source-side)</strong> prima del trasferimento WAN. Il ratio WAN target (OCI-side) non riduce le request ma riduce i dati effettivamente memorizzati. Le request dipendono dai blocchi trasmessi sulla WAN <em>dopo</em> il local dedup.</div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="vr-local-dedup">Dedup ratio LOCAL <span>(source-side)</span></label>
+          <div class="input-wrap">
+            <input type="number" id="vr-local-dedup" placeholder="es. 1.5" min="1" max="20" step="0.1" value="1.5" oninput="computeVeeamRequests()">
+            <span class="input-unit">x</span>
+          </div>
+          <div class="field-hint">Riduce i blocchi inviati sulla WAN. 1x = nessuna riduzione. Tipico: 1.5x–3x.</div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="vr-wan-dedup">Dedup ratio WAN TARGET <span>(OCI-side, info)</span></label>
+          <div class="input-wrap">
+            <input type="number" id="vr-wan-dedup" placeholder="es. 1.5" min="1" max="20" step="0.1" value="1.5" oninput="computeVeeamRequests()">
+            <span class="input-unit">x</span>
+          </div>
+          <div class="field-hint">Riduce lo spazio occupato su OCI (non riduce le request). Usato per stima storage totale.</div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="vr-block-size">Dimensione blocco Veeam</label>
+          <div class="input-wrap">
+            <input type="number" id="vr-block-size" min="256" max="4096" step="256" value="1024" oninput="computeVeeamRequests()">
+            <span class="input-unit">KB</span>
+          </div>
+          <div class="field-hint">Blocchi più grandi = meno request per TB. 256KB (LAN target) · 512KB (WAN) · 1024KB (WAN ottimizzato).</div>
+        </div>
+        <div class="field">
+          <label class="field-label">Request Veeam per TB trasferito <span>(range WAN)</span></label>
+          <div style="display: flex; gap: var(--space-2); align-items: center; margin-top: var(--space-1);">
+            <div class="input-wrap" style="flex:1">
+              <input type="number" id="vr-req-min" min="100000" step="50000" value="700000" oninput="computeVeeamRequests()">
+              <span class="input-unit" style="font-size:0.65rem; padding-inline: var(--space-2);">min/TB</span>
+            </div>
+            <span style="color: var(--color-text-faint); font-size: var(--text-xs);">—</span>
+            <div class="input-wrap" style="flex:1">
+              <input type="number" id="vr-req-max" min="100000" step="50000" value="900000" oninput="computeVeeamRequests()">
+              <span class="input-unit" style="font-size:0.65rem; padding-inline: var(--space-2);">max/TB</span>
+            </div>
+          </div>
+          <div class="field-hint">Default: 700K–900K/TB. Blocchi grandi → verso il minimo. Blocchi piccoli → verso il massimo.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Contratto OCI -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Contratto OCI — SKU B91627
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="vr-oci-units">Unità B91627 contrattualizzate</label>
+          <div class="input-wrap">
+            <input type="number" id="vr-oci-units" min="1" step="1" value="1000" oninput="computeVeeamRequests()">
+            <span class="input-unit">× 10K req</span>
+          </div>
+          <div class="field-hint">1 unità = 10.000 request/mese. 1.000 unità = 10.000.000 req/mese contrattualizzate.</div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="vr-cost-per-unit">Costo per unità B91627 <span>(€/10K req)</span></label>
+          <div class="input-wrap">
+            <input type="number" id="vr-cost-per-unit" placeholder="es. 0.0085" min="0" step="0.0001" value="0.0085" oninput="computeVeeamRequests()">
+            <span class="input-unit">€/10K</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risultati -->
+    <div class="card" id="vr-results">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Risultati Stimati
+      </div>
+      <div id="vr-result-content">
+        <div class="empty-state">
+          <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <h3>Inserisci i parametri</h3>
+          <p>Compila banda upload e totale dati per stimare le API request Veeam verso OCI.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Data Transfer Estimator — Calcolo locale, nessun dato inviato</footer>
+</div>
+
+<script>
+const state = {
+  time: { dataUnit: 'GB', bwUnit: 'Mbps', overhead: 10 },
+  cap:  { bwUnit: 'Mbps', timeUnit: 'ore', overhead: 10 }
+};
+
+const vrState = {
+  bwUnit: 'Mbps',
+  totalUnit: 'TB',
+  overhead: 10
+};
+
+(function(){
+  const t = document.querySelector('[data-theme-toggle]');
+  const r = document.documentElement;
+  let d = matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+  r.setAttribute('data-theme', d);
+  t && t.addEventListener('click', () => {
+    d = d === 'dark' ? 'light' : 'dark';
+    r.setAttribute('data-theme', d);
+  });
+})();
+
+function switchTab(tab) {
+  const tabs = ['time', 'capacity', 'requests'];
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', tabs[i] === tab);
+    b.setAttribute('aria-selected', tabs[i] === tab);
+  });
+  tabs.forEach(t => document.getElementById('panel-' + t).classList.toggle('active', t === tab));
+}
+
+function setDataUnit(unit) {
+  state.time.dataUnit = unit;
+  document.getElementById('t-datasize-unit').textContent = unit;
+  computeTime();
+}
+function setBwUnit(panel, unit) {
+  if (panel === 'time') { state.time.bwUnit = unit; document.getElementById('t-bw-unit').textContent = unit; computeTime(); }
+  else { state.cap.bwUnit = unit; document.getElementById('c-bw-unit2').textContent = unit; computeCapacity(); }
+}
+function setTimeUnit(unit) { state.cap.timeUnit = unit; document.getElementById('c-dur-unit').textContent = unit; computeCapacity(); }
+
+function updateOverhead(panel) {
+  const val = document.getElementById(panel + '-overhead').value;
+  document.getElementById(panel + '-overhead-val').textContent = val + '%';
+  if (panel === 't') state.time.overhead = Number(val); else state.cap.overhead = Number(val);
+}
+
+// ===== Veeam / OCI unit helpers =====
+function setVrUnit(field, unit, el) {
+  if (field === 'bw') {
+    vrState.bwUnit = unit;
+    document.getElementById('vr-bw-unit').textContent = unit;
+    document.querySelectorAll('[onclick*="setVrUnit(\'bw\'"]').forEach(p => p.classList.remove('active'));
+  } else {
+    vrState.totalUnit = unit;
+    document.getElementById('vr-total-unit').textContent = unit;
+    document.querySelectorAll('[onclick*="setVrUnit(\'total\'"]').forEach(p => p.classList.remove('active'));
+  }
+  if (el) el.classList.add('active');
+  computeVeeamRequests();
+}
+
+function updateVrOverhead() {
+  const val = document.getElementById('vr-overhead').value;
+  document.getElementById('vr-overhead-val').textContent = val + '%';
+  vrState.overhead = Number(val);
+}
+
+// ===== Utility =====
+function toBytesPerSec(bw, unit) {
+  const bitsPerSec = unit === 'kbps' ? bw * 1e3 : unit === 'Mbps' ? bw * 1e6 : bw * 1e9;
+  return bitsPerSec / 8;
+}
+function toBytes(size, unit) {
+  if (unit === 'MB') return size * 1e6;
+  if (unit === 'GB') return size * 1e9;
+  if (unit === 'TB') return size * 1e12;
+  return size;
+}
+function toSeconds(dur, unit) {
+  if (unit === 'min') return dur * 60;
+  if (unit === 'ore') return dur * 3600;
+  if (unit === 'giorni') return dur * 86400;
+  return dur;
+}
+function formatBytes(bytes) {
+  if (bytes < 1e6) return { val: (bytes / 1e3).toFixed(2), unit: 'KB' };
+  if (bytes < 1e9) return { val: (bytes / 1e6).toFixed(2), unit: 'MB' };
+  if (bytes < 1e12) return { val: (bytes / 1e9).toFixed(2), unit: 'GB' };
+  return { val: (bytes / 1e12).toFixed(3), unit: 'TB' };
+}
+function formatTimeFull(seconds) {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  let parts = [];
+  if (d > 0) parts.push(d + ' giorno' + (d > 1 ? 'i' : ''));
+  if (h > 0) parts.push(h + ' ora' + (h > 1 ? 'e' : ''));
+  if (m > 0) parts.push(m + ' min');
+  if (s > 0 || parts.length === 0) parts.push(s + ' sec');
+  return parts.join(', ');
+}
+function fmtNum(n) {
+  if (n >= 1e9) return (n / 1e9).toFixed(2) + ' B';
+  if (n >= 1e6) return (n / 1e6).toFixed(2) + ' M';
+  if (n >= 1e3) return (n / 1e3).toFixed(1) + ' K';
+  return Math.round(n).toString();
+}
+
+// ===== Tab 1: Tempo =====
+function computeTime() {
+  const dataSizeRaw = parseFloat(document.getElementById('t-datasize').value);
+  const bwRaw = parseFloat(document.getElementById('t-bandwidth').value);
+  const el = document.getElementById('t-result-content');
+  if (isNaN(dataSizeRaw) || isNaN(bwRaw) || dataSizeRaw <= 0 || bwRaw <= 0) return;
+  const dataBytes = toBytes(dataSizeRaw, state.time.dataUnit);
+  const bwBytesPerSec = toBytesPerSec(bwRaw, state.time.bwUnit) * (1 - state.time.overhead / 100);
+  const secondsNet = dataBytes / bwBytesPerSec;
+  const tFull = formatTimeFull(secondsNet);
+  el.innerHTML = `<div class="result-card highlight"><div class="result-label">Tempo stimato</div><div class="result-value">${tFull}</div></div>`;
+}
+
+// ===== Tab 2: Capacità =====
+function computeCapacity() {
+  const durRaw = parseFloat(document.getElementById('c-duration').value);
+  const bwRaw = parseFloat(document.getElementById('c-bandwidth').value);
+  const el = document.getElementById('c-result-content');
+  if (isNaN(durRaw) || isNaN(bwRaw) || durRaw <= 0 || bwRaw <= 0) return;
+  const seconds = toSeconds(durRaw, state.cap.timeUnit);
+  const bwBytesPerSec = toBytesPerSec(bwRaw, state.cap.bwUnit) * (1 - state.cap.overhead / 100);
+  const totalBytesNet = bwBytesPerSec * seconds;
+  const capNet = formatBytes(totalBytesNet);
+  el.innerHTML = `<div class="result-card highlight"><div class="result-label">Dati trasferibili</div><div class="result-value">${capNet.val}<span class="unit">${capNet.unit}</span></div></div>`;
+}
+
+// ===== Tab 3: Veeam + OCI B91627 =====
+function computeVeeamRequests() {
+  const bwRaw    = parseFloat(document.getElementById('vr-bandwidth').value);
+  const totalRaw = parseFloat(document.getElementById('vr-totaldata').value);
+  const usagePct = parseFloat(document.getElementById('vr-usagepct').value) || 70;
+  const localDedup   = Math.max(1, parseFloat(document.getElementById('vr-local-dedup').value) || 1);
+  const wanDedup     = Math.max(1, parseFloat(document.getElementById('vr-wan-dedup').value) || 1);
+  const blockKB      = parseFloat(document.getElementById('vr-block-size').value) || 1024;
+  const reqMinPerTB  = parseFloat(document.getElementById('vr-req-min').value) || 700000;
+  const reqMaxPerTB  = parseFloat(document.getElementById('vr-req-max').value) || 900000;
+  const ociUnits     = parseFloat(document.getElementById('vr-oci-units').value) || 1000;
+  const costPerUnit  = parseFloat(document.getElementById('vr-cost-per-unit').value) || 0.0085;
+
+  const el = document.getElementById('vr-result-content');
+
+  // Update SKU info header
+  const infoEl = document.getElementById('info-units-display');
+  if (infoEl) {
+    const tot = ociUnits * 10000;
+    infoEl.textContent = ociUnits.toLocaleString('it') + ' unità → ' + tot.toLocaleString('it') + ' req/mese';
+  }
+
+  if (isNaN(bwRaw) || bwRaw <= 0) {
+    el.innerHTML = '<div class="empty-state" style="padding:var(--space-8)"><h3>Inserisci la banda upload</h3><p>La banda è il parametro principale per stimare i dati trasferiti e le request generate.</p></div>';
+    return;
+  }
+
+  // Effective bandwidth in bytes/sec
+  const bwBps = toBytesPerSec(bwRaw, vrState.bwUnit) * (1 - vrState.overhead / 100);
+
+  // Active seconds per period
+  const activeRatio  = usagePct / 100;
+  const secsDay      = 86400 * activeRatio;
+  const secsWeek     = 7 * 86400 * activeRatio;
+  const secsMonth    = 30 * 86400 * activeRatio;
+
+  // Raw bytes transferred per period (pre-dedup, what exits the uplink)
+  const bytesDay   = bwBps * secsDay;
+  const bytesWeek  = bwBps * secsWeek;
+  const bytesMonth = bwBps * secsMonth;
+
+  // WAN bytes = raw bytes already includes local dedup effect at source
+  // The localDedup means Veeam sends 1/localDedup of the original data
+  // So effective WAN bytes = bytesMonth (these are already the deduped bytes going over WAN)
+  // But we also need to show how much sorgente data this corresponds to
+  // Actually: bytesMonth = bandwidth * time = what physically goes over the wire
+  // This is already the post-local-dedup stream. To know source data covered:
+  // sourceDataCovered = bytesMonth * localDedup
+  
+  // For request calculation: requests are based on WAN blocks (bytesMonth)
+  // Block size scaling: at 1024KB baseline
+  const blockFactor = 1024 / blockKB; // bigger blocks = fewer requests per byte
+  // req/TB at 1024KB = reqMinPerTB (baseline); at 512KB = 2x; at 256KB = 4x
+  const reqMinAdj = Math.round(reqMinPerTB * blockFactor);
+  const reqMaxAdj = Math.round(reqMaxPerTB * blockFactor);
+
+  const tbWanDay   = bytesDay   / 1e12;
+  const tbWanWeek  = bytesWeek  / 1e12;
+  const tbWanMonth = bytesMonth / 1e12;
+
+  const reqDayMin   = Math.round(tbWanDay   * reqMinAdj);
+  const reqDayMax   = Math.round(tbWanDay   * reqMaxAdj);
+  const reqWeekMin  = Math.round(tbWanWeek  * reqMinAdj);
+  const reqWeekMax  = Math.round(tbWanWeek  * reqMaxAdj);
+  const reqMonthMin = Math.round(tbWanMonth * reqMinAdj);
+  const reqMonthMax = Math.round(tbWanMonth * reqMaxAdj);
+  const reqMonthMid = Math.round((reqMonthMin + reqMonthMax) / 2);
+
+  const ociLimitTotal = ociUnits * 10000;
+  const withinOci = reqMonthMax <= ociLimitTotal;
+  const borderOci = reqMonthMin <= ociLimitTotal && reqMonthMax > ociLimitTotal;
+  const overOci   = reqMonthMin > ociLimitTotal;
+
+  const marginVal = ((ociLimitTotal - reqMonthMid) / ociLimitTotal * 100);
+  const marginStr = (marginVal >= 0 ? '+' : '') + marginVal.toFixed(1) + '%';
+
+  const unitsNeededMin = Math.ceil(reqMonthMin / 10000);
+  const unitsNeededMax = Math.ceil(reqMonthMax / 10000);
+  const costMin = (unitsNeededMin * costPerUnit).toFixed(4);
+  const costMax = (unitsNeededMax * costPerUnit).toFixed(4);
+
+  const ociColorClass = withinOci ? 'success-bg' : overOci ? 'warn-bg' : 'orange-bg';
+  const ociLabel = withinOci ? '✓ Nei limiti' : overOci ? '⚠ Supera sempre' : '⚠ Borderline';
+
+  const dayFmt   = formatBytes(bytesDay);
+  const weekFmt  = formatBytes(bytesWeek);
+  const monthFmt = formatBytes(bytesMonth);
+
+  // Source data covered per month (considering local dedup)
+  const srcMonthFmt = formatBytes(bytesMonth * localDedup);
+
+  // Total dataset section
+  let totalSection = '';
+  if (!isNaN(totalRaw) && totalRaw > 0) {
+    const totalBytes = toBytes(totalRaw, vrState.totalUnit);
+    const totalTB    = totalBytes / 1e12;
+    // WAN TB to send = totalTB / localDedup
+    const wanTB = totalTB / localDedup;
+    // OCI stored = totalTB / (localDedup * wanDedup)
+    const ociStoredTB = totalTB / (localDedup * wanDedup);
+    const totalReqMin = Math.round(wanTB * reqMinAdj);
+    const totalReqMax = Math.round(wanTB * reqMaxAdj);
+    // Days to complete: wanTB / tbWanDay
+    const daysToComplete = tbWanDay > 0 ? (wanTB / tbWanDay) : 0;
+    const weeksToComplete = daysToComplete / 7;
+    const monthsToComplete = daysToComplete / 30;
+    const wanFmt  = formatBytes(wanTB * 1e12);
+    const ociFmt  = formatBytes(ociStoredTB * 1e12);
+
+    totalSection = `
+      <div class="breakdown" style="margin-top:var(--space-4)">
+        <div class="breakdown-title">📦 Dataset Totale — ${totalRaw} ${vrState.totalUnit} sorgente</div>
+        <div class="breakdown-row"><span class="bk-label">Dati sorgente (pre-dedup)</span><span class="bk-val">${totalRaw} ${vrState.totalUnit}</span></div>
+        <div class="breakdown-row"><span class="bk-label">Dati WAN effettivi (÷ dedup local ${localDedup}x)</span><span class="bk-val">${wanFmt.val} ${wanFmt.unit}</span></div>
+        <div class="breakdown-row"><span class="bk-label">Spazio OCI stimato (÷ WAN dedup ${wanDedup}x)</span><span class="bk-val">${ociFmt.val} ${ociFmt.unit}</span></div>
+        <div class="breakdown-row"><span class="bk-label">Request totali stimate (min – max)</span><span class="bk-val">${fmtNum(totalReqMin)} – ${fmtNum(totalReqMax)}</span></div>
+        <div class="breakdown-row"><span class="bk-label">Tempo stimato completamento</span><span class="bk-val">~${Math.round(daysToComplete)} giorni (~${monthsToComplete.toFixed(1)} mesi)</span></div>
+        <div class="breakdown-row"><span class="bk-label">Unità B91627 totali (worst case)</span><span class="bk-val">${Math.ceil(totalReqMax / 10000).toLocaleString('it')} unità distribuite nel tempo</span></div>
+      </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="results-grid animate-in">
+      <div class="result-card highlight">
+        <div class="result-label">Dati trasferiti / mese (WAN)</div>
+        <div class="result-value">${monthFmt.val}<span class="unit">${monthFmt.unit}</span></div>
+        <div class="result-sub">${dayFmt.val} ${dayFmt.unit}/giorno · ${weekFmt.val} ${weekFmt.unit}/settimana</div>
+      </div>
+      <div class="result-card blue-bg">
+        <div class="result-label">Sorgente coperto / mese (× ${localDedup}x local dedup)</div>
+        <div class="result-value">${srcMonthFmt.val}<span class="unit">${srcMonthFmt.unit}</span></div>
+        <div class="result-sub">Dati originali processati da Veeam</div>
+      </div>
+      <div class="result-card purple-bg">
+        <div class="result-label">Request / mese — minimo</div>
+        <div class="result-value">${fmtNum(reqMonthMin)}</div>
+        <div class="result-sub">${fmtNum(reqDayMin)}/giorno · ${fmtNum(reqWeekMin)}/settimana</div>
+      </div>
+      <div class="result-card orange-bg">
+        <div class="result-label">Request / mese — massimo</div>
+        <div class="result-value">${fmtNum(reqMonthMax)}</div>
+        <div class="result-sub">${fmtNum(reqDayMax)}/giorno · ${fmtNum(reqWeekMax)}/settimana</div>
+      </div>
+      <div class="result-card ${ociColorClass}">
+        <div class="result-label">Confronto OCI B91627</div>
+        <div class="result-value">${ociLabel}</div>
+        <div class="result-sub">Limite: ${ociLimitTotal.toLocaleString('it')} req · Margine mid: ${marginStr}</div>
+      </div>
+      <div class="result-card">
+        <div class="result-label">Unità B91627 necessarie / mese</div>
+        <div class="result-value" style="font-size:var(--text-lg)">${unitsNeededMin.toLocaleString('it')} – ${unitsNeededMax.toLocaleString('it')}</div>
+        <div class="result-sub">Costo stimato: € ${costMin} – € ${costMax}/mese</div>
+      </div>
+    </div>
+
+    <div class="breakdown" style="margin-top:var(--space-4)">
+      <div class="breakdown-title">🔍 Dettaglio Parametri di Calcolo</div>
+      <div class="breakdown-row"><span class="bk-label">Banda dichiarata</span><span class="bk-val">${bwRaw} ${vrState.bwUnit}</span></div>
+      <div class="breakdown-row"><span class="bk-label">Overhead protocollo</span><span class="bk-val">${vrState.overhead}%</span></div>
+      <div class="breakdown-row"><span class="bk-label">Banda netta effettiva</span><span class="bk-val">${(bwBps * 8 / 1e6).toFixed(1)} Mbps</span></div>
+      <div class="breakdown-row"><span class="bk-label">Utilizzo mensile attivo</span><span class="bk-val">${usagePct}% (~${Math.round(30 * activeRatio)} giorni/mese)</span></div>
+      <div class="breakdown-row"><span class="bk-label">Dedup local (source-side)</span><span class="bk-val">${localDedup}x → riduce blocchi WAN di ${((1 - 1/localDedup)*100).toFixed(0)}%</span></div>
+      <div class="breakdown-row"><span class="bk-label">Dedup WAN target (OCI)</span><span class="bk-val">${wanDedup}x (riduce storage, non le request)</span></div>
+      <div class="breakdown-row"><span class="bk-label">Dimensione blocco Veeam</span><span class="bk-val">${blockKB} KB → ${reqMinAdj.toLocaleString('it')}–${reqMaxAdj.toLocaleString('it')} req/TB WAN</span></div>
+      <div class="breakdown-row"><span class="bk-label">Request stimate worst case / mese</span><span class="bk-val">${reqMonthMax.toLocaleString('it')}</span></div>
+      <div class="breakdown-row"><span class="bk-label">Limite contrattuale OCI</span><span class="bk-val">${ociLimitTotal.toLocaleString('it')} req (${ociUnits.toLocaleString('it')} × 10.000)</span></div>
+    </div>
+    ${totalSection}
+  `;
+}
+</script>
+</body>
+</html>
