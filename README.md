@@ -27,25 +27,39 @@ Calcola quanti dati puoi trasferire in una finestra temporale definita.
 ### 📡 API Requests — Veeam + OCI B91627
 Stima le API request generate da Veeam Backup & Replication verso OCI Object Storage, confrontandole con le unità contrattualizzate dello SKU B91627 (1 unità = 10.000 request/mese).
 
+Il tab offre **due stime complementari**:
+
+#### 🎯 Stima realistica — Profilo backup (consigliata)
+È il modo corretto per rispondere alla domanda «quante request genererà Veeam su OCI»: le request dipendono dai **dati effettivamente scritti** su object storage, non dalla banda. Si basa su full iniziale + change rate giornaliero.
+
+**Input:**
+- Dimensione full backup (sorgente protetta, GB/TB)
+- Change rate giornaliero (% del full che cambia ogni giorno → incrementale)
+- Full attivi/sintetici al mese (0 = forever-incremental, consigliato su object storage)
+
+**Output:**
+- **Request/mese a regime** (min–max) → il valore da usare per dimensionare le unità B91627
+- **Full iniziale una tantum** → picco nel mese di seeding
+- **Primo mese** (full + incrementali)
+- Confronto OCI B91627 a regime e margine
+- Unità B91627/mese e costo stimato
+- Dati scritti su OCI al giorno
+
+#### 📶 Stima da banda — tetto di throughput (verifica fattibilità)
+Assume il link saturo per le ore attive: indica il **massimo** di dati/request che l'uplink può reggere. Serve a verificare che la banda sostenga il full iniziale e gli incrementali, **non** è la spesa reale.
+
 **Input:**
 - Banda upload nominale e utilizzo effettivo (%)
 - Overhead protocollo WAN
 - Ore attive/giorno e giorni attivi/mese
 - Dataset sorgente totale (opzionale, per stimare i tempi di completamento)
+
+**Parametri comuni (Storage Optimization + Contratto):**
 - Dimensione blocco Veeam (256 KB / 512 KB / 1024 KB)
 - Dedup ratio **local** (source-side) — riduce i blocchi trasmessi sulla WAN
 - Dedup ratio **WAN target** (OCI-side) — riduce solo lo spazio occupato su OCI, non le request
-- Range request/TB WAN (min/max, default 700K–900K)
+- Range request/TB (min/max, default 700K–900K) — include già PUT/GET/LIST/DELETE
 - Unità B91627 contrattualizzate e costo per unità
-
-**Output:**
-- Dati WAN trasferiti per giorno / settimana / mese
-- Dati sorgente coperti al mese (post local dedup)
-- Request stimate per giorno / settimana / mese (range min–max)
-- Confronto con il limite contrattuale OCI e margine
-- Unità B91627 necessarie e costo stimato mensile
-- Dettaglio parametri di calcolo
-- Stima completamento dataset totale (se inserito)
 
 ---
 
@@ -60,12 +74,28 @@ Stima le API request generate da Veeam Backup & Replication verso OCI Object Sto
 
 ## Logica di Calcolo — Veeam/OCI
 
+**Fattore comune — Request per TB (dipende dal blocco):**
+```
+Request/TB_adj = Request/TB_base × (1024 KB / Dimensione blocco)
+```
+> Blocchi più piccoli ⇒ più oggetti/TB ⇒ più request. Il range Request/TB include già tutti i tipi di chiamata (PUT/GET/LIST/DELETE).
+
+**Stima realistica (da profilo backup) — request effettivamente fatturate:**
+```
+Incrementale/giorno   = Full × Change rate%
+Dati scritti su OCI/mese (a regime) = Incrementale/giorno × Giorni attivi + Full×Full_periodici
+Request/mese a regime = Dati scritti/mese (TB) × Request/TB_adj
+Request full iniziale = Full (TB) × Request/TB_adj   (una tantum, nel mese di seeding)
+```
+
+**Stima da banda (tetto di throughput) — massimo che il link può reggere:**
 ```
 Banda netta = Banda nominale × Utilizzo% × (1 − Overhead%)
 Dati WAN/giorno = Banda netta × Ore attive × 3600
-Request/mese = (Dati WAN mese in TB) × Request/TB_adj
-Request/TB_adj = Request/TB_base × (1024 KB / Dimensione blocco)
+Request/mese = Dati WAN mese (TB) × Request/TB_adj
 ```
+
+> ⚠️ Per **dimensionare le unità B91627** usa la **stima realistica**: la stima da banda è solo una verifica di fattibilità dell'uplink e sovrastima se il link non è saturo.
 
 > La dedup **local (source-side)** riduce i blocchi trasmessi sulla WAN e quindi le request.  
 > La dedup **WAN target (OCI-side)** riduce solo lo spazio di storage su OCI, non influenza le request.

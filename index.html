@@ -621,6 +621,52 @@ footer { padding-top: var(--space-4); border-top: 1px solid var(--color-divider)
       </div>
     </div>
 
+    <!-- Card 2b: Profilo Backup — stima diretta richieste -->
+    <div class="card">
+      <div class="card-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+        Profilo Backup — Stima Diretta Richieste <span class="badge">consigliata</span>
+      </div>
+      <div class="info-box" style="margin-bottom: var(--space-4);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <div>
+          La stima <strong>da banda</strong> (sopra) è il <em>tetto di throughput</em>: quante request potrebbero passare se il link fosse saturo.
+          La stima <strong>da profilo backup</strong> è quella <strong>realmente fatturata</strong>: dipende dai dati che Veeam scrive davvero su OCI —
+          il <strong>full iniziale</strong> (una tantum) più gli <strong>incrementali giornalieri</strong> secondo il change rate. È il modo corretto per stimare le request mensili su OCI.
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label class="field-label" for="vr-full-size">Dimensione full backup <span>(sorgente protetta)</span></label>
+          <div class="input-wrap">
+            <input type="number" id="vr-full-size" placeholder="es. 20" min="0" step="any" oninput="computeVeeamRequests()">
+            <span class="input-unit" id="vr-full-unit">TB</span>
+          </div>
+          <div class="unit-group" style="margin-top: var(--space-1);">
+            <button class="unit-pill" onclick="setVrUnit('full','GB',this)">GB</button>
+            <button class="unit-pill active" onclick="setVrUnit('full','TB',this)">TB</button>
+          </div>
+          <div class="field-hint">Volume dei dati protetti (front-end). Genera il full iniziale una tantum su OCI.</div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="vr-change-rate">Change rate giornaliero <span>(dati modificati/giorno)</span></label>
+          <div class="input-wrap">
+            <input type="number" id="vr-change-rate" placeholder="es. 5" min="0" max="100" step="0.5" value="5" oninput="computeVeeamRequests()">
+            <span class="input-unit">%/giorno</span>
+          </div>
+          <div class="field-hint">Quota del full che cambia ogni giorno → dati dell'incrementale. Tipico: 2–10%.</div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="vr-monthly-fulls">Full attivi / sintetici al mese</label>
+          <div class="input-wrap">
+            <input type="number" id="vr-monthly-fulls" min="0" max="31" step="1" value="0" oninput="computeVeeamRequests()">
+            <span class="input-unit">full/mese</span>
+          </div>
+          <div class="field-hint">0 = forever-incremental (consigliato su object storage). >0 se GFS/active full periodici.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Card 3: Contratto OCI -->
     <div class="card">
       <div class="card-title">
@@ -656,7 +702,7 @@ footer { padding-top: var(--space-4); border-top: 1px solid var(--color-divider)
         <div class="empty-state">
           <svg class="empty-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           <h3>Inserisci i parametri</h3>
-          <p>Compila almeno la banda upload per stimare i dati trasferiti al giorno/settimana/mese e le API request Veeam verso OCI.</p>
+          <p>Compila il <strong>profilo backup</strong> (full + change rate) per la stima realistica delle request su OCI, e/o la <strong>banda upload</strong> per la verifica di fattibilità del link.</p>
         </div>
       </div>
     </div>
@@ -674,6 +720,7 @@ const state = {
 const vrState = {
   bwUnit: 'Mbps',
   totalUnit: 'TB',
+  fullUnit: 'TB',
   overhead: 10,
   bwUtil: 80
 };
@@ -721,6 +768,10 @@ function setVrUnit(field, unit, el) {
     vrState.bwUnit = unit;
     document.getElementById('vr-bw-unit').textContent = unit;
     document.querySelectorAll('[onclick*="setVrUnit(\'bw\'"]').forEach(p => p.classList.remove('active'));
+  } else if (field === 'full') {
+    vrState.fullUnit = unit;
+    document.getElementById('vr-full-unit').textContent = unit;
+    document.querySelectorAll('[onclick*="setVrUnit(\'full\'"]').forEach(p => p.classList.remove('active'));
   } else {
     vrState.totalUnit = unit;
     document.getElementById('vr-total-unit').textContent = unit;
@@ -824,6 +875,9 @@ function computeVeeamRequests() {
   const reqMaxPerTB  = parseFloat(document.getElementById('vr-req-max').value) || 900000;
   const ociUnits     = parseFloat(document.getElementById('vr-oci-units').value) || 1000;
   const costPerUnit  = parseFloat(document.getElementById('vr-cost-per-unit').value) || 0.0085;
+  const fullRaw      = parseFloat(document.getElementById('vr-full-size').value);
+  const changeRate   = Math.max(0, parseFloat(document.getElementById('vr-change-rate').value) || 0) / 100;
+  const monthlyFulls = Math.max(0, parseFloat(document.getElementById('vr-monthly-fulls').value) || 0);
 
   const el = document.getElementById('vr-result-content');
 
@@ -834,10 +888,9 @@ function computeVeeamRequests() {
     infoEl.textContent = ociUnits.toLocaleString('it') + ' unità → ' + tot.toLocaleString('it') + ' req/mese';
   }
 
-  if (isNaN(bwRaw) || bwRaw <= 0) {
-    el.innerHTML = '<div class="empty-state" style="padding:var(--space-8)"><h3>Inserisci la banda upload</h3><p>La banda è il parametro principale per stimare i dati trasferiti e le request generate.</p></div>';
-    return;
-  }
+  // NB: la stima realistica (profilo backup) non dipende dalla banda.
+  // Il controllo "banda mancante" è spostato dopo il calcolo data-driven,
+  // così da poter comunque mostrare la stima consigliata.
 
   // Banda netta effettiva: nominale × utilizzo × (1 - overhead)
   const overheadFrac = vrState.overhead / 100;
@@ -921,7 +974,121 @@ function computeVeeamRequests() {
       </div>`;
   }
 
-  el.innerHTML = `
+  // ===== Stima diretta da profilo backup (dati realmente scritti su OCI) =====
+  let dataDrivenSection = '';
+  let bandwidthHeading = '';
+  if (!isNaN(fullRaw) && fullRaw > 0) {
+    const fullBytes       = toBytes(fullRaw, vrState.fullUnit);
+    const fullTB          = fullBytes / 1e12;
+    const dailyIncrTB     = fullTB * changeRate;                 // incrementale giornaliero
+    const monthlyIncrTB   = dailyIncrTB * activeDays;           // incrementali del mese
+    const monthlyFullTB   = fullTB * monthlyFulls;             // eventuali full periodici
+    const monthlyWrittenTB = monthlyIncrTB + monthlyFullTB;   // dati scritti su OCI/mese a regime
+
+    // Request (il range req/TB include già tutti i tipi: PUT/GET/LIST/DELETE)
+    const initReqMin   = Math.round(fullTB * reqMinAdj);
+    const initReqMax   = Math.round(fullTB * reqMaxAdj);
+    const dayReqMinDD  = Math.round(dailyIncrTB * reqMinAdj);
+    const dayReqMaxDD  = Math.round(dailyIncrTB * reqMaxAdj);
+    const monReqMinDD  = Math.round(monthlyWrittenTB * reqMinAdj);
+    const monReqMaxDD  = Math.round(monthlyWrittenTB * reqMaxAdj);
+    const monReqMidDD  = Math.round((monReqMinDD + monReqMaxDD) / 2);
+    const firstMonthMin = initReqMin + monReqMinDD;            // primo mese: full iniziale + incrementali
+    const firstMonthMax = initReqMax + monReqMaxDD;
+
+    // Confronto OCI sul valore realistico a regime
+    const ddWithin = monReqMaxDD <= ociLimitTotal;
+    const ddOver   = monReqMinDD > ociLimitTotal;
+    const ddClass  = ddWithin ? 'success-bg' : ddOver ? 'warn-bg' : 'orange-bg';
+    const ddLabel  = ddWithin ? '✓ Nei limiti' : ddOver ? '⚠ Supera sempre' : '⚠ Borderline';
+    const ddMargin = ((ociLimitTotal - monReqMidDD) / ociLimitTotal * 100);
+    const ddMarginStr = (ddMargin >= 0 ? '+' : '') + ddMargin.toFixed(1) + '%';
+
+    const unitsDDMin = Math.ceil(monReqMinDD / 10000);
+    const unitsDDMax = Math.ceil(monReqMaxDD / 10000);
+    const costDDMin  = (unitsDDMin * costPerUnit).toFixed(2);
+    const costDDMax  = (unitsDDMax * costPerUnit).toFixed(2);
+    const unitsInit  = Math.ceil(initReqMax / 10000);
+
+    const monWrittenFmt = formatBytes(monthlyWrittenTB * 1e12);
+    const dailyIncrFmt  = formatBytes(dailyIncrTB * 1e12);
+
+    dataDrivenSection = `
+      <div class="card-title" style="margin-top:0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>
+        Stima realistica — Profilo backup <span class="badge">consigliata</span>
+      </div>
+      <div class="results-grid animate-in">
+        <div class="result-card orange-bg">
+          <div class="result-label">Request / mese a regime (min – max)</div>
+          <div class="result-value" style="font-size:var(--text-lg)">${fmtNum(monReqMinDD)} – ${fmtNum(monReqMaxDD)}</div>
+          <div class="result-sub">Incrementali ${changeRate>0?(changeRate*100).toFixed(1)+'%/g':'—'} · ${monWrittenFmt.val} ${monWrittenFmt.unit}/mese scritti su OCI</div>
+        </div>
+        <div class="result-card purple-bg">
+          <div class="result-label">Full iniziale (una tantum)</div>
+          <div class="result-value" style="font-size:var(--text-lg)">${fmtNum(initReqMin)} – ${fmtNum(initReqMax)}</div>
+          <div class="result-sub">Seeding del full ${fullRaw} ${vrState.fullUnit} · ~${unitsInit.toLocaleString('it')} unità one-shot</div>
+        </div>
+        <div class="result-card highlight">
+          <div class="result-label">Primo mese (full + incrementali)</div>
+          <div class="result-value" style="font-size:var(--text-lg)">${fmtNum(firstMonthMin)} – ${fmtNum(firstMonthMax)}</div>
+          <div class="result-sub">Solo il mese del seeding iniziale</div>
+        </div>
+        <div class="result-card ${ddClass}">
+          <div class="result-label">Confronto OCI B91627 (a regime)</div>
+          <div class="result-value">${ddLabel}</div>
+          <div class="result-sub">Limite: ${ociLimitTotal.toLocaleString('it')} req · Margine mid: ${ddMarginStr}</div>
+        </div>
+        <div class="result-card">
+          <div class="result-label">Unità B91627 / mese a regime</div>
+          <div class="result-value" style="font-size:var(--text-lg)">${unitsDDMin.toLocaleString('it')} – ${unitsDDMax.toLocaleString('it')}</div>
+          <div class="result-sub">Costo: € ${costDDMin} – € ${costDDMax} / mese</div>
+        </div>
+        <div class="result-card blue-bg">
+          <div class="result-label">Dati scritti su OCI / giorno</div>
+          <div class="result-value">${dailyIncrFmt.val}<span class="unit">${dailyIncrFmt.unit}</span></div>
+          <div class="result-sub">${fmtNum(dayReqMinDD)} – ${fmtNum(dayReqMaxDD)} req/giorno</div>
+        </div>
+      </div>
+
+      <div class="breakdown" style="margin-top:var(--space-4)">
+        <div class="breakdown-title">📊 Dettaglio Stima da Profilo Backup</div>
+        <div class="breakdown-row"><span class="bk-label">Full backup (sorgente protetta)</span><span class="bk-val">${fullRaw} ${vrState.fullUnit}</span></div>
+        <div class="breakdown-row"><span class="bk-label">Change rate giornaliero</span><span class="bk-val">${(changeRate*100).toFixed(1)}% → ${dailyIncrFmt.val} ${dailyIncrFmt.unit}/giorno</span></div>
+        <div class="breakdown-row"><span class="bk-label">Incrementali scritti / mese</span><span class="bk-val">${formatBytes(monthlyIncrTB*1e12).val} ${formatBytes(monthlyIncrTB*1e12).unit} (${activeDays} giorni)</span></div>
+        <div class="breakdown-row"><span class="bk-label">Full periodici / mese</span><span class="bk-val">${monthlyFulls} → ${formatBytes(monthlyFullTB*1e12).val} ${formatBytes(monthlyFullTB*1e12).unit}</span></div>
+        <div class="breakdown-row"><span class="bk-label">Totale dati scritti su OCI / mese</span><span class="bk-val">${monWrittenFmt.val} ${monWrittenFmt.unit}</span></div>
+        <div class="breakdown-row"><span class="bk-label">Request/TB applicate (min–max)</span><span class="bk-val">${reqMinAdj.toLocaleString('it')} – ${reqMaxAdj.toLocaleString('it')}</span></div>
+        <div class="breakdown-row"><span class="bk-label">Request worst case / mese a regime</span><span class="bk-val">${monReqMaxDD.toLocaleString('it')}</span></div>
+        <div class="breakdown-row"><span class="bk-label">Request full iniziale (worst case)</span><span class="bk-val">${initReqMax.toLocaleString('it')}</span></div>
+      </div>
+
+      <div class="info-box" style="margin-top:var(--space-4)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <div>La stima <strong>a regime</strong> è quella da usare per dimensionare le unità B91627 mensili. Il <strong>full iniziale</strong> è un picco una tantum nel mese di seeding. Il range req/TB include già PUT, GET, LIST e DELETE.</div>
+      </div>
+    `;
+    bandwidthHeading = `
+      <div class="card-title" style="margin-top:var(--space-8)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Stima da banda — tetto di throughput <span class="badge orange">verifica fattibilità</span>
+      </div>
+      <div class="info-box" style="margin-bottom:var(--space-4)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <div>Assume il link saturo per le ore attive: indica il <strong>massimo</strong> di dati/request che la banda può reggere, utile a verificare che l'uplink sostenga il full iniziale e gli incrementali. Non è la spesa reale.</div>
+      </div>
+    `;
+  }
+
+  // Senza banda mostro solo la stima realistica (se c'è un profilo backup),
+  // altrimenti un empty state che indica le due strade possibili.
+  if (isNaN(bwRaw) || bwRaw <= 0) {
+    el.innerHTML = dataDrivenSection ||
+      '<div class="empty-state" style="padding:var(--space-8)"><h3>Inserisci la banda o il profilo backup</h3><p>Compila la <strong>banda upload</strong> per la verifica di fattibilità del link, oppure il <strong>profilo backup</strong> (full + change rate) per la stima realistica delle request su OCI.</p></div>';
+    return;
+  }
+
+  el.innerHTML = dataDrivenSection + bandwidthHeading + `
     <div class="results-grid animate-in">
       <div class="result-card highlight">
         <div class="result-label">Dati WAN trasferiti / giorno</div>
